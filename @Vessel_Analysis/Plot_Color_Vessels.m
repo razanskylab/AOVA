@@ -4,7 +4,11 @@ function Plot_Color_Vessels(AVA)
   % turn xy map into rgb image and display that
   nColors = 255;
   cMap = AVA.colorMap;
-  plotImage = normalize(adapthisteq(AVA.xy,'ClipLimit',0.02));
+  if ischar(cMap)
+    eval(['cMap = ' cMap '(nColors);']); % turn string to actual colormap matrix
+  end
+
+  plotImage = normalize(adapthisteq(normalize(AVA.xy), 'ClipLimit', 0.02));
   indexImage = gray2ind(plotImage,nColors);
   rgbImage = ind2rgb(indexImage,cMap);
   imagesc(rgbImage); axis image; title('combined');
@@ -27,16 +31,18 @@ function Plot_Color_Vessels(AVA)
     areaScaling = 0.1;
     [vesDiameters] = plot_vessel_diameters(AVA.Data.vessel_list,vesselColormap,areaScaling);
   end
-  vesDiameters = vesDiameters*AVA.dR*1e3;
+  % vesDiameters = vesDiameters*AVA.dR*1e3;
   % change colorbar labels to indicate vessel sizes
   c.Ticks = [0 0.5 1];
   halfDia = (min(vesDiameters)+max(vesDiameters))/2;
-  labels{1} = [num2str(min(vesDiameters),'%2.0f'),' um'];
-  labels{2} = [num2str(halfDia,'%2.0f'),' um'];
-  labels{3} = ['>= ' num2str(max(vesDiameters),'%2.0f'),' um'];
+  labels{1} = [num2str(min(vesDiameters),'%2.0f'),''];
+  labels{2} = [num2str(halfDia,'%2.0f'),''];
+  labels{3} = ['>= ' num2str(max(vesDiameters),'%2.0f'),''];
   c.TickLabels = labels;
 
   title('Color-Coded Vessel Size');
   axis off;
+
+  figure();
 
 end

@@ -1,11 +1,13 @@
 function Plot_Aova_Result(AVA)
 
   branchColor = Colors.DarkPurple;
-  branchMarkerSize = 40;
+  branchMarkerSize = 20;
   centerColor = Colors.DarkOrange;
 
   figure();
-  imagescj(normalize(adapthisteq(AVA.xy,'ClipLimit',0.02)),'gray'); colorbar('off'); axis('off');
+  imagescj(adapthisteq(normalize(AVA.xy),'ClipLimit',0.02),'gray'); 
+  colorbar('off'); 
+  axis('off');
   hold on;
   title('AOVA Results');
   if ~isempty(AVA.Data.branchCenters)
