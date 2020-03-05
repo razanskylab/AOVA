@@ -14,9 +14,13 @@ classdef Vessel_Data < hgsetget
         im;        % Grayscale image (main image for processing), should be real
         bw_mask;   % Mask image
         bw;        % Segmented image
-        bw_branches; % branch points
-        branchCenters;
-        nBranches;
+        bw_branches; % branch pixels
+
+        % new properties added by JR
+        branchCenters; % center points of bw_branches
+        nBranches; 
+        segments; % skeleton of bw
+        distTrans; % distance of "on" pixels to background
 
         dark_vessels = false; % TRUE if vessel is dark,
                              % i.e. represented by a 'valley' rather than a 'hill'

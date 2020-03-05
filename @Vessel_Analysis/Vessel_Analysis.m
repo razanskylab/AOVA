@@ -17,9 +17,9 @@ classdef Vessel_Analysis < handle
     bin; % store binarized image
 
     % Vessel statisitics Options
+    Data; 
     AviaSettings =  Vessel_Analysis.Get_Default_Avia_Settings;
     Stats; % stats calculates using Get_Vessel_Stats()
-    Data; %
     VesselSettings = Vessel_Settings();
 
     % plotting options ---------------------------------------------------------
