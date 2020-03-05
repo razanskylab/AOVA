@@ -16,16 +16,11 @@ classdef Vessel_Analysis < handle
 
     bin; % store binarized image
 
-    % Binarization Options  ----------------------------------------------------
-    binWhat = 0; % Which image should I use as basis for binarization?
-    %                 0 - Frangi filtered image
-    %                 1 - based on AVA.xy
-    %                 2 - signal map
-
     % Vessel statisitics Options
     AviaSettings =  Vessel_Analysis.Get_Default_Avia_Settings;
     Stats; % stats calculates using Get_Vessel_Stats()
-    Data; % stats calculates using Get_Vessel_Stats()
+    Data; %
+    VesselSettings = Vessel_Settings();
 
     % plotting options ---------------------------------------------------------
     newFigPlotting = 1; % default open all plots in new figure

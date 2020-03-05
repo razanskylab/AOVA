@@ -18,7 +18,7 @@ classdef Vessel_Data < hgsetget
         branchCenters;
         nBranches;
 
-        dark_vessels = true; % TRUE if vessel is dark,
+        dark_vessels = false; % TRUE if vessel is dark,
                              % i.e. represented by a 'valley' rather than a 'hill'
                              % Individual Vessels in a list have their own
                              % dark property, which override this one if set

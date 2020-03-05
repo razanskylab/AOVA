@@ -8,9 +8,6 @@ function bw_clean = clean_segmented_image(bw, min_object_size, min_hole_size)
   %        by detected pixels); smaller holes will be filled in.
   %
   % Output: BW_CLEAN - the modified binary image
-  %         OBJ_HOLES - a structure containing the size and location of
-  %         objects and holes, which can be used to speed up later calls to
-  %         this function (assuming BW is unchanged).
 
 
   % Remove small objects, if necessary
