@@ -6,6 +6,7 @@ function Plot_Aova_Result(AVA)
 
   figure();
   imagescj(adapthisteq(normalize(AVA.xy),'ClipLimit',0.02),'gray'); 
+  imagescj(AVA.xy,'gray'); 
   colorbar('off'); 
   axis('off');
   hold on;

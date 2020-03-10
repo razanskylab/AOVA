@@ -1,12 +1,7 @@
 function [AVA] = Get_Data(AVA)
-  % this is a computationally expensive function, hence we leave it as a
-  % normal method to be invoked on purpose rather than making it a .get
-  % method of the class
-  % same goes for the Get_VesselStats method
+
   fprintf('[AVA.Get_Data] Finding and analyzing vessels.\n');
-  % this is only for plotting using imshow (and imagesc?)
-  VesselSettings = Vessel_Settings;
-  Data = Vessel_Data(VesselSettings);
+  Data = Vessel_Data(AVA.VesselSettings);
   Data.im = single(AVA.xy);
   Data.im_orig = single(AVA.xy);
 
@@ -21,11 +16,6 @@ function [AVA] = Get_Data(AVA)
 
   % Segment the image using the isotropic undecimated wavelet transform
   [AVA.AviaSettings] = seg_iuwt(Data, AVA.AviaSettings);
-  if AVA.verbosePlotting
-    figure;
-    imagescj(Data.bw); axis off; colorbar('off');
-    title('[AVA] Cleaned, Binarized Image');
-  end
 
   % Compute centre lines and profiles by spline-fitting
   jprintf('   Extracting vessel profiles...');
@@ -39,7 +29,8 @@ function [AVA] = Get_Data(AVA)
   done(toc);
 
   % Make sure NaNs are 'excluded' from summary measurements
-  Data.vessel_list.exclude_nans;
+  Data.vessel_list.exclude_nans();
+  Data.vessel_list.clean_vessel_list();
 
   % Store the arguments so that they are still available if the VESSEL_DATA
   % object is saved later

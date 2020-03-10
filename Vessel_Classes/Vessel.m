@@ -626,7 +626,7 @@ classdef Vessel < handle
                 return;
             end
             if nargin < 2
-                do_all = false;
+                do_all = true;
             end
             % Get indices containing nans
             not_nans = ~any((isnan(obj.prop_side1) | isnan(obj.prop_side2) | isnan(obj.prop_centre)), 2);
@@ -665,7 +665,6 @@ classdef Vessel < handle
         end
 
 
-
         % Ensure that any place where a diameter could not be measured has
         % its KEEP_INDS option set to FALSE.
         function exclude_nans(obj)
@@ -683,7 +682,6 @@ classdef Vessel < handle
                 obj(ii).keep_inds(is_nan) = false;
             end
         end
-
 
 
         % Copy the diameter measurements, and offsets from the starting
