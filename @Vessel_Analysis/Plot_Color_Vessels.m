@@ -8,7 +8,8 @@ function Plot_Color_Vessels(AVA)
     eval(['cMap = ' cMap '(nColors);']); % turn string to actual colormap matrix
   end
 
-  plotImage = normalize(adapthisteq(normalize(AVA.xy), 'ClipLimit', 0.02));
+  % plotImage = normalize(adapthisteq(normalize(AVA.xy), 'ClipLimit', 0.02));
+  plotImage = AVA.xy;
   indexImage = gray2ind(plotImage,nColors);
   rgbImage = ind2rgb(indexImage,cMap);
   imagesc(rgbImage); axis image; title('combined');
@@ -16,7 +17,6 @@ function Plot_Color_Vessels(AVA)
   % now we can display whatever colorbar we want, it will not affect the xy map
   C = Colors;
   vesselColormap = C.greenToRed;
-
 
   colormap(gca,vesselColormap);
   c = colorbar;
@@ -43,6 +43,5 @@ function Plot_Color_Vessels(AVA)
   title('Color-Coded Vessel Size');
   axis off;
 
-  figure();
 
 end
