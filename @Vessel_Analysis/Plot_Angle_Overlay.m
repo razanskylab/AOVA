@@ -1,4 +1,4 @@
-function Plot_Data_Overlay(AVA)
+function Plot_Angle_Overlay(AVA)
   vList = AVA.Data.vessel_list;
 
   % use scattered data interpolation and nearest neighbor the create a 2d map
