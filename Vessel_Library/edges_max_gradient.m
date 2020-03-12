@@ -1,4 +1,4 @@
-function [args] = edges_max_gradient(vessel_data, args)
+function [args] = edges_max_gradient(vessel_data, args, updateProgbar)
   % Identify vessel edges from image profiles based upon local steepness.
   %
   % First, compute the profiles perpendicular to each vessel according to
@@ -30,6 +30,10 @@ function [args] = edges_max_gradient(vessel_data, args)
   % edges, this time guided by the mean edge locations previously identified
   % from the maximum gradient.
 
+  if nargin < 3
+    updateProgbar = false;
+  end
+
   % Extract the properties we need
   vessels = vessel_data.vessel_list;
   bw = vessel_data.bw;
@@ -41,8 +45,14 @@ function [args] = edges_max_gradient(vessel_data, args)
   % Generate mask regions
   [vessel_regions, mask_regions] = create_vessel_profile_masks(vessels, bw, bw_mask);
 
+  nVessels = numel(vessels);
+  updateVessel = floor(nVessels./50); % get 25 updates on progress
+
   % Loop through the vessels
-  for ii = 1:numel(vessels)
+  for ii = 1:nVessels
+    if updateProgbar && ~mod(ii, updateVessel)
+      progressbar(ii ./ nVessels);
+    end
 
     % Create the default (NaN) side coordinates
     vessels(ii).side1 = nan(size(vessels(ii).centre));
