@@ -76,342 +76,13 @@ classdef Vessel_Data < hgsetget
 
     end
 
-
-    %% Display functions
-
-    methods
-
-
-        % Update image painting if the appropriate figure exists, otherwise
-        % do nothing.  May be called when, for example, diameters are
-        % changed by the calling function does not know whether a repaint
-        % is required or not.
-        % If the figure handle is known, it can be passed as H.
-        % Can force a repaint, even if lines are already present, by
-        % setting REPAINT_ALL to TRUE.
-        % NOTE: This function only paints the lines, but does not show the
-        % image itself (which is assumed to already be visible).
-        function update_image_lines(obj, h, repaint_all)
-
-            % Search for figure with the right name for this image
-            if nargin < 2 || isempty(h) || ~ishandle(h)
-                h = get_figure(obj);
-                % If there is no figure, don't do anything
-                if isempty(h)
-                    return;
-                end;
-            end;
-            % Make figure active
-            set(0, 'CurrentFigure', h);
-
-            % Identify the lines and labels already present on the image
-            lines = findobj(h, 'type', 'line');
-            labels = findobj(h, 'type', 'text');
-            rects = findobj(h, 'type', 'rectangle');
-
-            % Don't repaint all by default
-            if nargin < 3
-                repaint_all = false;
-            elseif repaint_all
-                % Delete previous lines and labels if there
-                delete(lines);
-                delete(labels);
-                delete(rects);
-                lines = [];
-                labels = [];
-                rects = [];
-            end
-
-            % Check whether any vessels at all
-            if obj.num_vessels == 0
-                return;
-            end
-
-
-            % Only paint new lines if none already present
-            if isempty(lines)
-                % Paint optic disc, if it's available
-                if ~isempty(obj.optic_disc_centre) && ~isempty(obj.optic_disc_diameter)
-                    % Show optic disc as circle... which is a rectangle with very, very
-                    % rounded corners
-                    disc_rc = obj.optic_disc_centre;
-                    diam = obj.optic_disc_diameter;
-                    rectangle('Position', [disc_rc(2)-diam/2, disc_rc(1)-diam/2, diam, diam], ...
-                        'Curvature', [1 1], 'EdgeColor', obj.settings.col_optic_disc, 'visible', 'off', 'tag', 'optic_disc');
-
-                    % If inner and outer mask regions are set, show them too
-                    if ~isempty(obj.optic_disc_mask)
-                        min_dist = (.5 + obj.optic_disc_mask(1)) * diam;
-                        max_dist = (.5 + obj.optic_disc_mask(2)) * diam;
-
-                        % Show inner and outer regions
-                        rectangle('Position', [disc_rc(2)-min_dist, disc_rc(1)-min_dist, min_dist*2, min_dist*2], ...
-                            'Curvature', [1 1], 'EdgeColor', obj.settings.col_optic_disc, 'visible', 'off', 'tag', 'optic_disc');
-                        rectangle('Position', [disc_rc(2)-max_dist, disc_rc(1)-max_dist, max_dist*2, max_dist*2], ...
-                            'Curvature', [1 1], 'EdgeColor', obj.settings.col_optic_disc, 'visible', 'off', 'tag', 'optic_disc');
-                    end
-                end
-
-                % Somewhat convoluted but improves painting speed by rather
-                % a lot (perhaps 5-10 times), and also improves toggling
-                % visible / invisible speed.
-                % Because centre lines and vessel edges will either all be
-                % shown or none at all, each can be plotted as a single
-                % 'line' object rather than separate objects for each
-                % vessel.  To do so, they need to be converted into single
-                % vectors, with NaN values where points should not be
-                % connected (i.e. between vessels).
-                % Paint centre lines
-                fun = @(x) cat(1, x, [nan, nan]);
-                temp = cellfun(fun, {obj.vessel_list.centre}, 'UniformOutput', false);
-                cent = cell2mat(temp');
-                line(cent(:,2), cent(:,1), 'Color', obj.settings.col_centre_line, 'linewidth', 1, ...
-                    'visible', 'off', 'tag', 'vessel_centre');
-
-                % Paint vessel edges lines
-                temp = cellfun(fun, {obj.vessel_list.side1}, 'UniformOutput', false);
-                side1 = cell2mat(temp');
-                temp = cellfun(fun, {obj.vessel_list.side2}, 'UniformOutput', false);
-                side2 = cell2mat(temp');
-                line([side1(:,2) side2(:,2)], [side1(:,1) side2(:,1)], 'Color', obj.settings.col_edges, 'linewidth', 1, ...
-                    'visible', 'off', 'tag', 'vessel_edge');
-
-                % Loop through vessels to paint labels
-                for ind = 1:numel(obj.vessel_list)
-                    % Paint vessel numbers
-                    c = obj.vessel_list(ind).centre(round(end/2),:) - [2,2];
-                    text(c(2), c(1), num2str(ind), 'Margin', .1, 'Color', [1 1 1], 'BackgroundColor', obj.settings.col_labels, ...
-                        'Interpreter', 'none', ...
-                        'visible', 'off', 'tag', 'vessel_label', 'userdata', ind);
-                end
-
-                % Now get references to the lines and labels
-                lines = findobj(h, 'type', 'line');
-                rects = findobj(h, 'type', 'rectangle');
-                labels = findobj(h, 'type', 'text');
-            end
-
-            % Adjust visibility for each option
-            hand = findobj(rects, 'tag', 'optic_disc');
-            if obj.settings.show_optic_disc
-                set(hand, 'visible', 'on');
-            else
-                set(hand, 'visible', 'off');
-            end
-            hand = findobj(lines, 'tag', 'vessel_centre');
-            if obj.settings.show_centre_line
-                set(hand, 'visible', 'on');
-            else
-                set(hand, 'visible', 'off');
-            end
-            hand = findobj(labels, 'tag', 'vessel_label');
-            if obj.settings.show_labels
-                set(hand, 'visible', 'on');
-            else
-                set(hand, 'visible', 'off');
-            end
-            hand = findobj(lines, 'tag', 'vessel_edge');
-            if obj.settings.show_edges
-                set(hand, 'visible', 'on');
-            else
-                set(hand, 'visible', 'off');
-            end
-
-            % Get handle to selected vessel
-            v = obj.selected_vessel;
-
-            % Adjust visibility for currently selected diameters
-            hand = findobj(lines, 'tag', 'vessel_diameter');
-            if ~isempty(v)
-                % Check whether currently selected diameters have been
-                % painted, or if other ones have
-                if ~isempty(hand)
-                    % Assume that can't have more than one set of diameters
-                    % showing, so only need to check first
-                    ud = get(hand(1), 'userdata');
-                    if obj.selected_vessel_ind ~= ud(1)
-                        delete(hand);
-                        hand = [];
-                    end
-                end
-                % If haven't got any diameters painted, paint them now
-                if isempty(hand) || repaint_all
-                    ind = obj.selected_vessel_ind;
-                    % Using a loop, sadly, but that way I can set the user
-                    % data properly... just in case FINDOBJ returns the
-                    % handles in an unexpected order ever
-                    hand = zeros(size(v.side1,1), 1);
-                    for ii = 1:size(v.side1,1)
-                        hand(ii) = line([v.side1(ii,2)'; v.side2(ii,2)'], [v.side1(ii,1)'; v.side2(ii,1)'], ...
-                            'color', obj.settings.col_diameters, 'linewidth', 1, ...
-                            'visible', 'off', 'tag', 'vessel_diameter', 'userdata', [ind, ii]);
-                    end
-                end
-                % Need to sort diameters
-                ud = get(hand, 'userdata');
-                if iscell(ud)
-                    ud = cell2mat(ud);
-                end
-                [dum, sort_inds] = sort(ud(:,2));
-                hand = hand(sort_inds);
-
-                % If painting, colours and display spacing might not be right, so fix those
-                % Need to sort handles first
-                if obj.settings.show_diameters
-                    % Set colours
-                    k_inds = v.keep_inds;
-                    if isempty(k_inds)
-                        set(hand, 'color', obj.settings.col_diameters);
-                    else
-                        set(hand(~k_inds), 'color', obj.settings.col_diameters_ex);
-                        set(hand(k_inds), 'color', obj.settings.col_diameters);
-                    end
-
-                    % Apply display resolution, unless set to 1
-                    if obj.settings.show_spacing == 1
-                        set(hand, 'visible', 'on');
-                    else
-                        set(hand, 'visible', 'off');
-                        resolution_mask = false(v.num_diameters, 1);
-                        res_inds = 1:obj.settings.show_spacing:numel(resolution_mask);
-                        offset = floor((numel(resolution_mask) - res_inds(end)) / 2);
-                        resolution_mask(res_inds + offset) = true;
-                        set(hand(resolution_mask), 'visible', 'on');
-                    end
-                else
-                    % Don't need to plot diameters, so hide any that are there
-                    set(hand, 'visible', 'off');
-                end
-
-                % Always show selected if available and desired
-                if obj.settings.show_highlighted && ~isempty(v.highlight_inds)
-                    sel_inds = obj.selected_vessel.highlight_inds;
-                    set(hand(sel_inds), 'color', obj.settings.col_highlighted, 'visible', 'on');
-                end
-            else
-                % Don't need to plot diameters, so hide any that are there
-                set(hand, 'visible', 'off');
-            end
-        end
-
-
-
-
-        % Search for a figure showing the Vessel_Data
-        % If none available, one will be created - but set to invisible
-        function [h, created] = get_figure(obj, create)
-            created = false;
-            % Search for figure
-            h = findobj('tag', obj.id);
-            % If CREATE and no figure currently exists
-            if nargin >= 2 && create && isempty(h)
-                % If got a file name, use for figure name
-                if isempty(obj.file_name)
-                    h = figure('tag', obj.id);
-                else
-                    h = figure('Name', obj.file_name, 'NumberTitle','off', 'tag', obj.id, 'visible', 'off');
-                end
-                created = true;
-            end
-        end
-
-
-
-        % TRUE if the vessel data is shown on a figure, FALSE otherwise
-        function val = is_showing(obj)
-            val = ~isempty(get_figure(obj, false));
-        end
-
-
-
-        % Show raw image including vessels painted on top
-        function imshow(obj)
-            % Search for figure, and create it if necessary
-            [h, created] = get_figure(obj, true);
-            % Get image to show
-            if ~isempty(obj.settings) && obj.settings.show_orig && ~isempty(obj.im_orig)
-                im2 = obj.im_orig;
-            else
-                im2 = obj.im;
-            end
-            % Can't show if no image there...
-            if isempty(im2)
-                return;
-            end
-            % Show image
-            ax = findobj(obj.get_figure, 'type', 'axes');
-            if isempty(ax) || created
-                % Show image
-                if isempty(ax)
-                    figure(h);
-                    imshow(im2, [], 'border', 'tight');
-                else
-                    imshow(im2, [], 'border', 'tight', 'parent', ax);
-                end
-                % Set axes properties to improve performance
-                set(ax, 'ALimMode', 'manual', ...
-                    'CLimMode', 'manual', ...
-                    'DataAspectRatioMode', 'manual', ...
-                    'Drawmode', 'fast', ...
-                    'PlotBoxAspectRatioMode', 'manual', ...
-                    'TickDirMode', 'manual', ...
-                    'XLimMode', 'manual', ...
-                    'YLimMode', 'manual', ...
-                    'ZLimMode', 'manual', ...
-                    'XTickMode', 'manual', ...
-                    'YTickMode', 'manual', ...
-                    'ZTickMode', 'manual', ...
-                    'XTickLabelMode', 'manual', ...
-                    'YTickLabelMode', 'manual', ...
-                    'ZTickLabelMode', 'manual');
-            else
-                % If figure was already showing, would be a bit faster just
-                % to update the CDATA, but then the colour map can be
-                % wrong.. not sure how best to fix this, so just do
-                % IMSHOW for now
-                imshow(im2, [], 'border', 'tight', 'parent', ax);
-%                 set(findobj(ax, 'type', 'image'), 'CData', im2, 'CDataMapping', 'scaled');
-            end
-            set(h, 'NextPlot', 'new');
-            % Set double buffering in parent figure as required
-            if ~isempty(obj.settings)
-                if (obj.settings.double_buffer)
-                    set(h, 'DoubleBuffer', 'on');
-                else
-                    set(h, 'DoubleBuffer', 'off');
-                end
-            end
-
-            % Update painted lines
-            update_image_lines(obj, h);
-            % Make visible if newly created
-            set(h, 'visible', 'on');
-        end
-
-
-
-        % Sets the HIGHLIGHT_INDS of the currently selected vessel
-        % Won't work if VAL is in the wrong format (checked by VESSEL
-        % object - see code there for details)
-        function set_highlight_inds(obj, val)
-            if ~isempty(obj.selected_vessel)
-                obj.selected_vessel.highlight_inds = val;
-                update_image_lines(obj);
-                obj.selected_vessel.update_plot;
-            end
-        end
-
-    end
-
-
-
     %% VESSEL_LIST functions
-
     methods
 
         % Remove NaNs from vessels and remove vessels with < MIN_DIAMETERS
         % valid diameter measurements
         function clean_vessel_list(obj, min_diameters)
+            % remove NANS
             for ii = 1:obj.num_vessels
                 obj.vessel_list(ii).remove_nans;
             end
@@ -420,7 +91,6 @@ classdef Vessel_Data < hgsetget
             end
             obj.remove_short_vessels(min_diameters);
         end
-
 
         % Add vessels to vessel list
         function add_vessels(obj, v)
@@ -485,7 +155,7 @@ classdef Vessel_Data < hgsetget
             obj.val_selected_vessel_ind = -1;
             % There's a chance vessels already sorted, then don't need to
             % repaint
-            [dum, inds] = sort(len,'descend');
+            [~, inds] = sort(len,'descend');
             if ~issorted(inds)
                 obj.vessel_list = obj.vessel_list(inds);
                 % Reset selected vessel
@@ -515,7 +185,7 @@ classdef Vessel_Data < hgsetget
             obj.val_selected_vessel_ind = -1;
             % There's a chance vessels already sorted, then don't need to
             % repaint
-            [dum, inds] = sort(d,'descend');
+            [~, inds] = sort(d,'descend');
             if ~issorted(inds)
                 obj.vessel_list = obj.vessel_list(inds);
                 % Reset selected vessel
@@ -526,11 +196,7 @@ classdef Vessel_Data < hgsetget
                 update_image_lines(obj, [], true);
             end
         end
-
     end
-
-
-
 
     %% GET and SET methods
     methods
@@ -659,84 +325,86 @@ classdef Vessel_Data < hgsetget
 
     % Save and load methods
     methods (Static)
-        function obj = loadobj(obj)
-            if isstruct(obj) || isa(obj, 'Vessel_Data')
-                % Call default constructor
-                new_obj = Vessel_Data;
-                % Assign property values
-                new_obj.settings    = obj.settings;
-                new_obj.im_orig     = obj.im_orig;
-                new_obj.im          = obj.im;
-                new_obj.bw_mask     = obj.bw_mask;
-                new_obj.bw          = obj.bw;
-                new_obj.selected_vessel_ind = obj.selected_vessel_ind;
-                new_obj.dark_vessels = obj.dark_vessels;
-                new_obj.file_name   = obj.file_name;
-                new_obj.file_path   = obj.file_path;
-                new_obj.vessel_list = obj.vessel_list;
-                new_obj.args        = obj.args;
-                % Individually set Vessel_Data properties of vessel_list
-                for ii = 1:numel(obj.vessel_list)
-                    new_obj.vessel_list(ii).vessel_data = new_obj;
-                end
-                % Return new object
-                obj = new_obj;
-            end
-        end
+        % function obj = loadobj(obj)
+        %     warning('WHY!!!')
+
+        %     if isstruct(obj) || isa(obj, 'Vessel_Data')
+        %         % Call default constructor
+        %         new_obj = Vessel_Data;
+        %         % Assign property values
+        %         new_obj.settings    = obj.settings;
+        %         new_obj.im_orig     = obj.im_orig;
+        %         new_obj.im          = obj.im;
+        %         new_obj.bw_mask     = obj.bw_mask;
+        %         new_obj.bw          = obj.bw;
+        %         new_obj.selected_vessel_ind = obj.selected_vessel_ind;
+        %         new_obj.dark_vessels = obj.dark_vessels;
+        %         new_obj.file_name   = obj.file_name;
+        %         new_obj.file_path   = obj.file_path;
+        %         new_obj.vessel_list = obj.vessel_list;
+        %         new_obj.args        = obj.args;
+        %         % Individually set Vessel_Data properties of vessel_list
+        %         for ii = 1:numel(obj.vessel_list)
+        %             new_obj.vessel_list(ii).vessel_data = new_obj;
+        %         end
+        %         % Return new object
+        %         obj = new_obj;
+        %     end
+        % end
     end
 
     methods
 
         % Create a duplicate Vessel_Data object
-        function new_obj = duplicate(obj)
-            if isa(obj, 'Vessel_Data')
-                % Call default constructor
-                new_obj = Vessel_Data;
-                % Assign property values
-                new_obj.settings     = obj.settings;
-                new_obj.im_orig      = obj.im_orig;
-                new_obj.im           = obj.im;
-                new_obj.bw_mask      = obj.bw_mask;
-                new_obj.bw           = obj.bw;
-                new_obj.selected_vessel_ind = obj.selected_vessel_ind;
-                new_obj.dark_vessels = obj.dark_vessels;
-                new_obj.file_name    = obj.file_name;
-                new_obj.file_path    = obj.file_path;
-                new_obj.args         = obj.args;
-                % Need to individually copy vessel list
-                new_obj.vessel_list = Vessel.empty(numel(obj.vessel_list), 0);
-                for ii = numel(obj.vessel_list):-1:1
-                    if ii == numel(obj.vessel_list)
-                        new_obj.vessel_list(ii) = obj.vessel_list(ii).duplicate;
-                    else
-                        obj.vessel_list(ii).duplicate(new_obj.vessel_list(ii));
-                    end
-                end
-            else
-                throw(MException('Vessel_Data:dupicate', ...
-                    'Not a Vessel_Data object passed to Vessel_Data.duplicate'));
-            end
-        end
+        % function new_obj = duplicate(obj)
+        %     if isa(obj, 'Vessel_Data')
+        %         % Call default constructor
+        %         new_obj = Vessel_Data;
+        %         % Assign property values
+        %         new_obj.settings     = obj.settings;
+        %         new_obj.im_orig      = obj.im_orig;
+        %         new_obj.im           = obj.im;
+        %         new_obj.bw_mask      = obj.bw_mask;
+        %         new_obj.bw           = obj.bw;
+        %         new_obj.selected_vessel_ind = obj.selected_vessel_ind;
+        %         new_obj.dark_vessels = obj.dark_vessels;
+        %         new_obj.file_name    = obj.file_name;
+        %         new_obj.file_path    = obj.file_path;
+        %         new_obj.args         = obj.args;
+        %         % Need to individually copy vessel list
+        %         new_obj.vessel_list = Vessel.empty(numel(obj.vessel_list), 0);
+        %         for ii = numel(obj.vessel_list):-1:1
+        %             if ii == numel(obj.vessel_list)
+        %                 new_obj.vessel_list(ii) = obj.vessel_list(ii).duplicate;
+        %             else
+        %                 obj.vessel_list(ii).duplicate(new_obj.vessel_list(ii));
+        %             end
+        %         end
+        %     else
+        %         throw(MException('Vessel_Data:dupicate', ...
+        %             'Not a Vessel_Data object passed to Vessel_Data.duplicate'));
+        %     end
+        % end
 
 
-        function obj = saveobj(obj)
-            % Create and save structure
-            s.settings     = obj.settings;
-            s.im_orig      = obj.im_orig;
-            s.im           = obj.im;
-            s.bw_mask      = obj.bw_mask;
-            s.bw           = obj.bw;
-            s.bw_branches           = obj.bw_branches;
-            s.branchCenters           = obj.branchCenters;
-            s.nBranches           = obj.nBranches;
-            s.selected_vessel_ind = obj.selected_vessel_ind;
-            s.dark_vessels = obj.dark_vessels;
-            s.file_name    = obj.file_name;
-            s.file_path    = obj.file_path;
-            s.vessel_list  = obj.vessel_list;
-            s.args         = obj.args;
-            obj = s;
-        end
+        % function obj = saveobj(obj)
+        %     % Create and save structure
+        %     s.settings     = obj.settings;
+        %     s.im_orig      = obj.im_orig;
+        %     s.im           = obj.im;
+        %     s.bw_mask      = obj.bw_mask;
+        %     s.bw           = obj.bw;
+        %     s.bw_branches           = obj.bw_branches;
+        %     s.branchCenters           = obj.branchCenters;
+        %     s.nBranches           = obj.nBranches;
+        %     s.selected_vessel_ind = obj.selected_vessel_ind;
+        %     s.dark_vessels = obj.dark_vessels;
+        %     s.file_name    = obj.file_name;
+        %     s.file_path    = obj.file_path;
+        %     s.vessel_list  = obj.vessel_list;
+        %     s.args         = obj.args;
+        %     obj = s;
+        % end
     end
 
 end

@@ -36,6 +36,12 @@ classdef Vessel_Analysis < handle
     dR; % average x-y pixels size
   end
 
+  properties (Dependent = true)
+    nVessels(1, 1) {mustBeNumeric};
+    nSegments(1, 1) {mustBeNumeric};
+    averageDiameters(1,:) {mustBeNumeric};
+  end
+
 
   % Methods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
@@ -71,29 +77,27 @@ classdef Vessel_Analysis < handle
         end
       end
     end
-
-    function saveAVA = saveobj(AVA)
-      % don't save empty objects...
-      if isempty(AVA.xy)
-        saveAVA = [];
-      else
-        saveAVA = AVA;
-      end
-    end
-
   end
-
 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % small/short methods not worth putting in extra file %%%%%%%%%%%%%%%%%%%%%%%%
   methods
+    % run full AVA analysis ----------------------------------------------------
     function [AVA] = Full_Analysis(AVA)
       AVA.Get_Data;
       AVA.Get_Stats;
       if AVA.verbosePlotting
         % plot different important things
         AVA.Plot_Aova_Result();
+      end
+    end
+
+    % god old Vprintf ----------------------------------------------------------
+    function VPrintF(AVA,varargin)
+      if AVA.verboseOutput
+        fprintf(varargin{:});
+        drawnow;
       end
     end
   end
@@ -173,5 +177,26 @@ classdef Vessel_Analysis < handle
     DefaultAviaSettings = Get_Default_Avia_Settings();
   end % end of static methods definition
   %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Depended Properties
+  %%===========================================================================
+  methods
+    function nVessels = get.nVessels(AVA)
+      nVessels = numel(AVA.Data.vessel_list);
+    end
+    function nSegments = get.nSegments(AVA)
+      nSegments = sum([AVA.Data.vessel_list.num_diameters]);
+    end
+    function averageDiameters = get.averageDiameters(AVA)
+      for iVessel = AVA.nVessels:-1:1
+        averageDiameters(iVessel) = mean(AVA.Data.vessel_list(iVessel).diameters);
+      end
+    end
+
+
+  end
+  % end of static methods definition
+  %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 end % end of class definition

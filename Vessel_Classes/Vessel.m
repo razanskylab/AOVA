@@ -742,66 +742,66 @@ classdef Vessel < handle
     %% SAVE and LOAD functions
 
     methods (Static)
-        function obj = loadobj(obj)
-            if isstruct(obj) || isa(obj, 'Vessel')
-                % Call default constructor
-                new_obj = Vessel;
-                % Assign property values from struct
-                new_obj.prop_centre      = obj.centre;
-                new_obj.prop_side1       = obj.side1;
-                new_obj.prop_side2       = obj.side2;
-                new_obj.prop_angles      = obj.angles;
-                new_obj.prop_keep_inds   = obj.keep_inds;
-                new_obj.prop_dark        = obj.prop_dark;
-                new_obj.im_profiles       = obj.im_profiles;
-                new_obj.im_profiles_rows  = obj.im_profiles_rows;
-                new_obj.im_profiles_cols  = obj.im_profiles_cols;
-                new_obj.im_profiles_model = obj.im_profiles_model;
-                obj = new_obj;
-            end
-        end
+        % function obj = loadobj(obj)
+        %     if isstruct(obj) || isa(obj, 'Vessel')
+        %         % Call default constructor
+        %         new_obj = Vessel;
+        %         % Assign property values from struct
+        %         new_obj.prop_centre      = obj.centre;
+        %         new_obj.prop_side1       = obj.side1;
+        %         new_obj.prop_side2       = obj.side2;
+        %         new_obj.prop_angles      = obj.angles;
+        %         new_obj.prop_keep_inds   = obj.keep_inds;
+        %         new_obj.prop_dark        = obj.prop_dark;
+        %         new_obj.im_profiles       = obj.im_profiles;
+        %         new_obj.im_profiles_rows  = obj.im_profiles_rows;
+        %         new_obj.im_profiles_cols  = obj.im_profiles_cols;
+        %         new_obj.im_profiles_model = obj.im_profiles_model;
+        %         obj = new_obj;
+        %     end
+        % end
     end
 
     methods
 
         % Create a duplicate Vessel object
-        function new_obj = duplicate(obj, new_obj)
-            if isa(obj, 'Vessel')
-                % Call default constructor if not passed
-                if nargin < 2
-                    new_obj = Vessel;
-                end
-                % Assign property values from struct
-                new_obj.prop_centre      = obj.prop_centre;
-                new_obj.prop_side1       = obj.prop_side1;
-                new_obj.prop_side2       = obj.prop_side2;
-                new_obj.prop_angles      = obj.prop_angles;
-                new_obj.prop_keep_inds   = obj.prop_keep_inds;
-                new_obj.prop_dark        = obj.prop_dark;
-                new_obj.im_profiles       = obj.im_profiles;
-                new_obj.im_profiles_rows  = obj.im_profiles_rows;
-                new_obj.im_profiles_cols  = obj.im_profiles_cols;
-                new_obj.im_profiles_model = obj.im_profiles_model;
-                new_obj.vessel_data      = obj.vessel_data;
-            else
-                throw(MException('Vessel:dupicate', ...
-                    'Not a Vessel object passed to Vessel.duplicate'));
-            end
-        end
+        % function new_obj = duplicate(obj, new_obj)
+        %     if isa(obj, 'Vessel')
+        %         % Call default constructor if not passed
+        %         if nargin < 2
+        %             new_obj = Vessel;
+        %         end
+        %         % Assign property values from struct
+        %         new_obj.prop_centre      = obj.prop_centre;
+        %         new_obj.prop_side1       = obj.prop_side1;
+        %         new_obj.prop_side2       = obj.prop_side2;
+        %         new_obj.prop_angles      = obj.prop_angles;
+        %         new_obj.prop_keep_inds   = obj.prop_keep_inds;
+        %         new_obj.prop_dark        = obj.prop_dark;
+        %         new_obj.im_profiles       = obj.im_profiles;
+        %         new_obj.im_profiles_rows  = obj.im_profiles_rows;
+        %         new_obj.im_profiles_cols  = obj.im_profiles_cols;
+        %         new_obj.im_profiles_model = obj.im_profiles_model;
+        %         new_obj.vessel_data      = obj.vessel_data;
+        %     else
+        %         throw(MException('Vessel:dupicate', ...
+        %             'Not a Vessel object passed to Vessel.duplicate'));
+        %     end
+        % end
 
-        % Create a structure with the required properties for saving
-        function s = saveobj(obj)
-            s.centre      = obj.prop_centre;
-            s.side1       = obj.prop_side1;
-            s.side2       = obj.prop_side2;
-            s.angles      = obj.prop_angles;
-            s.keep_inds   = obj.prop_keep_inds;
-            s.prop_dark   = obj.prop_dark;
-            s.im_profiles = obj.im_profiles;
-            s.im_profiles_rows  = obj.im_profiles_rows;
-            s.im_profiles_cols  = obj.im_profiles_cols;
-            s.im_profiles_model = obj.im_profiles_model;
-        end
+        % % Create a structure with the required properties for saving
+        % function s = saveobj(obj)
+        %     s.centre      = obj.prop_centre;
+        %     s.side1       = obj.prop_side1;
+        %     s.side2       = obj.prop_side2;
+        %     s.angles      = obj.prop_angles;
+        %     s.keep_inds   = obj.prop_keep_inds;
+        %     s.prop_dark   = obj.prop_dark;
+        %     s.im_profiles = obj.im_profiles;
+        %     s.im_profiles_rows  = obj.im_profiles_rows;
+        %     s.im_profiles_cols  = obj.im_profiles_cols;
+        %     s.im_profiles_model = obj.im_profiles_model;
+        % end
     end
 
 
