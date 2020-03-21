@@ -114,8 +114,6 @@ classdef Vessel_Data < hgsetget
             else
                 obj.vessel_list(inds) = [];
             end
-            % Update the image if displayed
-            obj.update_image_lines([], true);
         end
 
 
@@ -162,8 +160,6 @@ classdef Vessel_Data < hgsetget
                 if sel_ind > 0
                     obj.val_selected_vessel_ind = find(inds == sel_ind);
                 end
-                % Do repaint
-                update_image_lines(obj, [], true);
             end
         end
 
@@ -192,8 +188,6 @@ classdef Vessel_Data < hgsetget
                 if sel_ind > 0
                     obj.val_selected_vessel_ind = find(inds == sel_ind);
                 end
-                % Do repaint
-                update_image_lines(obj, [], true);
             end
         end
     end
@@ -231,7 +225,6 @@ classdef Vessel_Data < hgsetget
             end
         end
 
-
         function val = get.calibration_value(obj)
             val = obj.settings.calibration_value;
         end
@@ -241,7 +234,6 @@ classdef Vessel_Data < hgsetget
             val = numel(obj.vessel_list);
         end
 
-
         function val = get.total_diameters(obj)
             if obj.num_vessels <= 0
                 val = 0;
@@ -250,161 +242,6 @@ classdef Vessel_Data < hgsetget
             end
         end
 
-
-        function val = get.selected_vessel_ind(obj)
-            val = obj.val_selected_vessel_ind;
-        end
-
-
-        function set.selected_vessel_ind(obj, val)
-            % Check different from currently selected
-            % If no, don't do anything.  If yes, remove HIGHLIGHT_INDS from
-            % currently selected vessel
-            prev_ind = obj.selected_vessel_ind;
-            if val == prev_ind
-                return;
-            end
-            % Deal with previously selected vessel if necessary
-            if prev_ind > 0 && prev_ind <= obj.num_vessels
-                prev_vessel = obj.vessel_list(prev_ind);
-                prev_vessel.highlight_inds = [];
-                prev_vessel.update_plot;
-            end
-            % Deal with newly selected vessel if necessary
-            if val > 0 && val <= obj.num_vessels
-                obj.val_selected_vessel_ind = val;
-                new_vessel = obj.vessel_list(val);
-                new_vessel.highlight_inds = [];
-                new_vessel.update_plot;
-            else
-                obj.val_selected_vessel_ind = -1;
-            end
-            % Update image if displayed
-            update_image_lines(obj);
-        end
-    end
-
-
-
-
-    %% PROTECTED functions
-
-    methods (Access = protected)
-        % Resizes all currently set fields.  Images are tested first to see
-        % if they require the resize.
-        % This is called whenever the IM property is set to an image of a
-        % different size.
-        function do_resize(obj, old_size, new_size)
-            % Don't do anything if sizes are the same
-            if isequal(old_size, new_size)
-                return;
-            end
-            % Resize images
-            if ~isempty(obj.im) && ~isequal(obj.im, new_size)
-                obj.im = imresize(obj.im, new_size);
-            end
-            if ~isempty(obj.bw_mask) && ~isequal(obj.bw_mask, new_size)
-                obj.bw_mask = imresize(obj.bw_mask, new_size);
-            end
-            if ~isempty(obj.bw) && ~isequal(obj.bw, new_size)
-                obj.bw = imresize(obj.bw, new_size);
-            end
-            % Resize vessels
-            scale_factor = new_size ./ old_size;
-            for ii = 1:obj.num_vessels
-                obj.vessel_list(ii).do_scale(scale_factor);
-            end
-        end
-
-    end
-
-
-
-
-    %% LOAD, SAVE and DUPLICATE functions
-
-    % Save and load methods
-    methods (Static)
-        % function obj = loadobj(obj)
-        %     warning('WHY!!!')
-
-        %     if isstruct(obj) || isa(obj, 'Vessel_Data')
-        %         % Call default constructor
-        %         new_obj = Vessel_Data;
-        %         % Assign property values
-        %         new_obj.settings    = obj.settings;
-        %         new_obj.im_orig     = obj.im_orig;
-        %         new_obj.im          = obj.im;
-        %         new_obj.bw_mask     = obj.bw_mask;
-        %         new_obj.bw          = obj.bw;
-        %         new_obj.selected_vessel_ind = obj.selected_vessel_ind;
-        %         new_obj.dark_vessels = obj.dark_vessels;
-        %         new_obj.file_name   = obj.file_name;
-        %         new_obj.file_path   = obj.file_path;
-        %         new_obj.vessel_list = obj.vessel_list;
-        %         new_obj.args        = obj.args;
-        %         % Individually set Vessel_Data properties of vessel_list
-        %         for ii = 1:numel(obj.vessel_list)
-        %             new_obj.vessel_list(ii).vessel_data = new_obj;
-        %         end
-        %         % Return new object
-        %         obj = new_obj;
-        %     end
-        % end
-    end
-
-    methods
-
-        % Create a duplicate Vessel_Data object
-        % function new_obj = duplicate(obj)
-        %     if isa(obj, 'Vessel_Data')
-        %         % Call default constructor
-        %         new_obj = Vessel_Data;
-        %         % Assign property values
-        %         new_obj.settings     = obj.settings;
-        %         new_obj.im_orig      = obj.im_orig;
-        %         new_obj.im           = obj.im;
-        %         new_obj.bw_mask      = obj.bw_mask;
-        %         new_obj.bw           = obj.bw;
-        %         new_obj.selected_vessel_ind = obj.selected_vessel_ind;
-        %         new_obj.dark_vessels = obj.dark_vessels;
-        %         new_obj.file_name    = obj.file_name;
-        %         new_obj.file_path    = obj.file_path;
-        %         new_obj.args         = obj.args;
-        %         % Need to individually copy vessel list
-        %         new_obj.vessel_list = Vessel.empty(numel(obj.vessel_list), 0);
-        %         for ii = numel(obj.vessel_list):-1:1
-        %             if ii == numel(obj.vessel_list)
-        %                 new_obj.vessel_list(ii) = obj.vessel_list(ii).duplicate;
-        %             else
-        %                 obj.vessel_list(ii).duplicate(new_obj.vessel_list(ii));
-        %             end
-        %         end
-        %     else
-        %         throw(MException('Vessel_Data:dupicate', ...
-        %             'Not a Vessel_Data object passed to Vessel_Data.duplicate'));
-        %     end
-        % end
-
-
-        % function obj = saveobj(obj)
-        %     % Create and save structure
-        %     s.settings     = obj.settings;
-        %     s.im_orig      = obj.im_orig;
-        %     s.im           = obj.im;
-        %     s.bw_mask      = obj.bw_mask;
-        %     s.bw           = obj.bw;
-        %     s.bw_branches           = obj.bw_branches;
-        %     s.branchCenters           = obj.branchCenters;
-        %     s.nBranches           = obj.nBranches;
-        %     s.selected_vessel_ind = obj.selected_vessel_ind;
-        %     s.dark_vessels = obj.dark_vessels;
-        %     s.file_name    = obj.file_name;
-        %     s.file_path    = obj.file_path;
-        %     s.vessel_list  = obj.vessel_list;
-        %     s.args         = obj.args;
-        %     obj = s;
-        % end
     end
 
 end

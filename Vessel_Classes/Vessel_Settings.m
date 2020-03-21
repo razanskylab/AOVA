@@ -5,7 +5,7 @@ classdef Vessel_Settings < hgsetget
     %   pixels for measurements.
     %
     %
-    % Copyright © 2011 Peter Bankhead.
+    % Copyright ï¿½ 2011 Peter Bankhead.
     % See the file : Copyright.m for further details.
 
     properties        
@@ -186,68 +186,5 @@ classdef Vessel_Settings < hgsetget
         
                 
     end
-    
-    
-    
-    
-
-    
-    % Save and load methods
-    methods (Static)
-        function obj = loadobj(obj)
-            if isstruct(obj)
-                % Call default constructor
-                new_obj = Vessel_Settings;
-                % Assign property values from struct
-                new_obj.calibrate         = obj.calibrate;
-                new_obj.calibration_value = obj.calibration_value;
-                new_obj.calibration_unit  = obj.calibration_unit;
-                new_obj.show_centre_line  = obj.show_centre_line;
-                new_obj.show_diameters    = obj.show_diameters;
-                new_obj.show_edges        = obj.show_edges;
-                new_obj.show_highlighted  = obj.show_highlighted;
-                new_obj.show_labels       = obj.show_labels;
-                new_obj.show_spacing      = obj.show_spacing;
-                new_obj.show_orig         = obj.show_orig;
-                new_obj.col_centre_line   = obj.col_centre_line;
-                new_obj.col_diameters     = obj.col_diameters;
-                new_obj.col_diameters_ex  = obj.col_diameters_ex;
-                new_obj.col_edges         = obj.col_edges;
-                new_obj.col_highlighted   = obj.col_highlighted;
-                new_obj.col_labels        = obj.col_labels;
-                new_obj.last_path         = obj.last_path;
-                new_obj.double_buffer     = obj.double_buffer;
-                new_obj.prompt            = obj.prompt;
-                obj = new_obj;
-            end
-        end
-    end
-    
-    methods
-        function obj = saveobj(obj)
-            % Create and save structure
-            s.calibrate         = obj.calibrate;
-            s.calibration_value = obj.calibration_value;
-            s.calibration_unit  = obj.calibration_unit;
-            s.show_centre_line  = obj.show_centre_line;
-            s.show_diameters    = obj.show_diameters;
-            s.show_edges        = obj.show_edges;
-            s.show_highlighted  = obj.show_highlighted;
-            s.show_labels       = obj.show_labels;
-            s.show_spacing      = obj.show_spacing;
-            s.show_orig         = obj.show_orig;
-            s.col_centre_line   = obj.col_centre_line;
-            s.col_diameters     = obj.col_diameters;
-            s.col_diameters_ex  = obj.col_diameters_ex;
-            s.col_edges         = obj.col_edges;
-            s.col_highlighted   = obj.col_highlighted;
-            s.col_labels        = obj.col_labels;
-            s.last_path         = obj.last_path;
-            s.double_buffer     = obj.double_buffer;
-            s.prompt            = obj.prompt;
-            obj = s;
-        end
-    end
-    
     
 end
