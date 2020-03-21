@@ -40,6 +40,7 @@ classdef Vessel_Analysis < handle
     nVessels(1, 1) {mustBeNumeric};
     nSegments(1, 1) {mustBeNumeric};
     averageDiameters(1,:) {mustBeNumeric};
+    FullData;
   end
 
 
@@ -185,13 +186,52 @@ classdef Vessel_Analysis < handle
     function nVessels = get.nVessels(AVA)
       nVessels = numel(AVA.Data.vessel_list);
     end
+
     function nSegments = get.nSegments(AVA)
       nSegments = sum([AVA.Data.vessel_list.num_diameters]);
     end
+
     function averageDiameters = get.averageDiameters(AVA)
       for iVessel = AVA.nVessels:-1:1
         averageDiameters(iVessel) = mean(AVA.Data.vessel_list(iVessel).diameters);
       end
+    end
+
+    function FullData = get.FullData(AVA)
+      FullData = [];
+      vList = AVA.Data.vessel_list;
+      fun = @(x) cat(1, x);
+      centers = cellfun(fun, {vList.centre}, 'UniformOutput', false);
+      centers = cell2mat(centers');
+
+      side1 = cellfun(fun, {vList.side1}, 'UniformOutput', false);
+      side1 = cell2mat(side1');
+      side2 = cellfun(fun, {vList.side2}, 'UniformOutput', false);
+      side2 = cell2mat(side2');
+
+      % angles = 
+
+      angles = cellfun(fun, {vList.angles}, 'UniformOutput', false);
+      angles = cell2mat(angles');
+
+      diameters = cellfun(fun, {vList.diameters}, 'UniformOutput', false);
+      diameters = cell2mat(diameters');
+
+      lengthStraight = [vList(:, 1).length_straight_line];
+      lengthCum = [vList(:, 1).length_cumulative];
+      turtosity = calculate_turtosity(lengthCum,lengthStraight);
+
+      FullData.centers = centers;
+      FullData.side1 = side1;
+      FullData.side2 = side2;
+      FullData.angles = angles;
+      FullData.diameters = diameters;
+
+
+      FullData.lengthStraight = lengthStraight;
+      FullData.lengthCum = lengthCum;
+      FullData.turtosity = turtosity;
+
     end
 
 
