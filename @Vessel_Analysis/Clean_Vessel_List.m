@@ -15,6 +15,6 @@ function [AVA] = Clean_Vessel_List(AVA,minSegments)
   vesRemovedPer = (1- AVA.nVessels./nVesselsPre)*100;
   segRemovedAbs = nSegmentsPre - AVA.nSegments;
   segRemovedPer = (1- AVA.nSegments./nSegmentsPre)*100;
-  AVA.VPrintF('Removed %i (%2.2f %%) vessels and %i (%2.2f %%) segments!\n',...
+  AVA.VPrintF('   Removed %i (%2.2f %%) vessels and %i (%2.2f %%) segments!\n',...
     vesRemovedAbs,vesRemovedPer,segRemovedAbs,segRemovedPer);
 end
