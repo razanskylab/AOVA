@@ -1,6 +1,6 @@
 % AVA Class - Autoamtic Vessel Analysis
 
-classdef Vessel_Analysis < handle
+classdef Vessel_Analysis < BaseClass
   properties (Constant = true)
   end
 
@@ -13,6 +13,7 @@ classdef Vessel_Analysis < handle
     xy;% maps to be stored and plotted / calculated
     x; y; z; % plot vectors with units (mm)
     area;
+    imageCenter{mustBeNumeric} = [];  % used for angle and radius calculation
 
     bin; % store binarized image
 
@@ -23,11 +24,7 @@ classdef Vessel_Analysis < handle
     VesselSettings = Vessel_Settings();
 
     % plotting options ---------------------------------------------------------
-    newFigPlotting = 1; % default open all plots in new figure
     useUnits = true; % plot using units not index if possbile
-    noAxis = true;
-    noColorBar = true;
-    colorMap = 'gray';
   end
 
   properties (SetAccess = private)
@@ -97,14 +94,6 @@ classdef Vessel_Analysis < handle
         AVA.Plot_Aova_Result();
       end
     end
-
-    % god old Vprintf ----------------------------------------------------------
-    function VPrintF(AVA,varargin)
-      if AVA.verboseOutput
-        fprintf(varargin{:});
-        drawnow;
-      end
-    end
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,20 +157,28 @@ classdef Vessel_Analysis < handle
     end
 
     % get area of Map, it's fairly simple map ----------------------------------
-    function area = get.area(M)
-      %Note: see above
-      lengthX = max(M.x) - min(M.x);
-      legnthY = max(M.y) - min(M.y);
-      area = lengthX*legnthY;
+    function area = get.area(AVA)
+      area = AVA.imageArea; % just keeping this for legacy...
     end
 
+    % if we don't set the image center to an arb. point, we assume it's in the 
+    % center of the image
+    function imageCenter = get.imageCenter(AVA)
+      if isempty(AVA.imageCenter) && ~isempty(AVA.xy)
+        imageCenter = size(AVA.xy)/2;
+        AVA.imageCenter = imageCenter;
+      else
+        imageCenter = AVA.imageCenter;
+      end
+    end
 
-  end % end of methods definition
+  end
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % static methods
 
   methods (Static)
     DefaultAviaSettings = Get_Default_Avia_Settings();
-  end % end of static methods definition
-  %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Depended Properties
@@ -224,7 +221,5 @@ classdef Vessel_Analysis < handle
       end
     end
   end
-  % end of static methods definition
-  %<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-end % end of class definition
+end 
