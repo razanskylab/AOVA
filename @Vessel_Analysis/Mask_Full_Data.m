@@ -74,11 +74,11 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
   
   % correct scalar values
-  DS.area = sum(mask); % TODO fixme just count the pixels in the mask
-  DS.totalLength = sum(DS.lengthCum);
-  DS.nVessel = sum(vesInMask);
-  DS.nSegments = sum(segInMask);
-  DS.nBranches = sum(branchInMask);
+  DS.area = sum(mask(:)); % TODO fixme just count the pixels in the mask
+  DS.totalLength = sum(DS.lengthCum(:));
+  DS.nVessel = sum(vesInMask(:));
+  DS.nSegments = sum(segInMask(:));
+  DS.nBranches = sum(branchInMask(:));
   DS.vesselDensity = DS.nVessel./DS.area;
   DS.branchDensity = DS.nBranches./DS.area;
 
