@@ -24,6 +24,9 @@ function [DS] = Get_Full_Data(AVA)
   % DS.vesCenter
   % DS.vesCtrDistance
   % DS.vesDiameter
+  % 
+  % recently added stats: 
+  % lengthFraction
   %
   % TODO calculate total vessel area and coverage 
   % (vessel segment length * diameter? / total area)
@@ -76,6 +79,10 @@ function [DS] = Get_Full_Data(AVA)
   % get general data (scalar) --------------------------------------------------
   DS.area = AVA.imageArea;
   DS.totalLength = sum(DS.lengthCum);
+  DS.lengthFraction = DS.totalLength./DS.area; 
+  if DS.lengthFraction > 1
+    short_warn('we have more vessels than the image size...');
+  end
   DS.nVessel = AVA.nVessels;
   DS.nSegments = AVA.nSegments;
   DS.vesselDensity = AVA.vesselDensity;

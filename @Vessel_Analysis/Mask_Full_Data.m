@@ -74,8 +74,12 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
   
   % correct scalar values
-  DS.area = sum(mask(:)); % TODO fixme just count the pixels in the mask
+  DS.area = sum(mask(:)); 
   DS.totalLength = sum(DS.lengthCum(:));
+  DS.lengthFraction = DS.totalLength./DS.area; 
+  if DS.lengthFraction > 1
+    short_warn('we have more vessels than the image size...');
+  end
   DS.nVessel = sum(vesInMask(:));
   DS.nSegments = sum(segInMask(:));
   DS.nBranches = sum(branchInMask(:));
