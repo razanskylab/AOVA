@@ -2,7 +2,7 @@
 function [AVA] = Keep_Vessels(AVA,diaRange)
   
   % keep vessels based on average diameter -------------------------------------
-  tic;
+  tStart = tic;
   minDia = diaRange(1);
   maxDia = diaRange(2);
   nVesselsPre = AVA.nVessels;
@@ -37,7 +37,7 @@ function [AVA] = Keep_Vessels(AVA,diaRange)
   vesRemovedAbs = nVesselsPre - AVA.nVessels;
   vesRemovedPer = (1- AVA.nVessels./nVesselsPre)*100;
   AVA.VPrintF('   Removed %i (%2.2f %%) vessels...',vesRemovedAbs,vesRemovedPer);
-  done(toc);
+  AVA.Done(tStart);
 
   % TODO: keep vessels based on vessel length (NOT number of segments)
   

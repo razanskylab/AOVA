@@ -27,6 +27,14 @@ function [DS] = Get_Full_Data(AVA)
   % 
   % recently added stats: 
   % lengthFraction
+  % meanDiameter
+  % meanLength
+  % meanTurtosity
+  % meanCtrAngle
+  % medianDiameter
+  % medianLength
+  % medianTurtosity
+  % medianCtrAngle
   %
   % TODO calculate total vessel area and coverage 
   % (vessel segment length * diameter? / total area)
@@ -77,18 +85,30 @@ function [DS] = Get_Full_Data(AVA)
   DS.vesDiameter = AVA.averageDiameters; % average diameter of each vessel
 
   % get general data (scalar) --------------------------------------------------
-  DS.area = AVA.imageArea;
   DS.totalLength = sum(DS.lengthCum);
+  DS.nVessel = AVA.nVessels;
+  DS.nSegments = AVA.nSegments;
+  
+  DS.area = AVA.imageArea;
+  DS.vesselDensity = AVA.vesselDensity;
+  DS.imageCenter = AVA.imageCenter;
   DS.lengthFraction = DS.totalLength./DS.area; 
   if DS.lengthFraction > 1
     short_warn('we have more vessels than the image size...');
   end
-  DS.nVessel = AVA.nVessels;
-  DS.nSegments = AVA.nSegments;
-  DS.vesselDensity = AVA.vesselDensity;
-  DS.imageCenter = AVA.imageCenter;
 
-  
+  % get some simple overall statistics, so we don't have to extract them from the
+  % table later...
+  DS.meanDiameter = mean(DS.segDiameters);
+  DS.meanLength = mean(DS.lengthCum);
+  DS.meanTurtosity = mean(DS.turtosity);
+  DS.meanCtrAngle = mean(DS.ctrAngle);
+
+  DS.medianDiameter = median(DS.vesDiameter);
+  DS.medianLength = median(DS.lengthCum);
+  DS.medianTurtosity = median(DS.turtosity);
+  DS.medianCtrAngle = median(DS.ctrAngle);
+
   % branch related 
   % first get into correct shape to match (x1,y1; x2, y2) form like other centers
   DS.nBranches = AVA.nBranches;
@@ -96,6 +116,13 @@ function [DS] = Get_Full_Data(AVA)
   DS.branchCenter = AVA.Data.branchCenters';
   DS.branchCenter = flipud(DS.branchCenter);
   AVA.Done(startTic);
-
+  
+  % these are just here for completeness, they are used in mask data...
+  % and to make sure that coversion to table works...
+  DS.growthArea = []; % size of area where vessels are growing 
+  DS.vesselGrowthDensity = [];
+  DS.branchGrowthDensity = [];
+  DS.lengthGrowthFraction = [];
+  
 end
 

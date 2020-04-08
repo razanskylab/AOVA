@@ -1,5 +1,12 @@
-function [DS] = Mask_Full_Data(AVA,DS,mask)
+function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   % keep data where mask == true
+  % if mask has a whole (like in wound data) but the area should be 
+  % calculated without the hole, then supply the fullMask with the correct 
+  % area...
+
+  if (nargin < 4)
+    fullMask = mask;
+  end
 
   startTic = tic;
   AVA.VPrintF('Masking vessel, segment and branch data...')
@@ -62,6 +69,8 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
   % only keep data for wanted segments
   DS.segCenter = DS.segCenter(:,segInMask); 
   DS.angles = DS.angles(:,segInMask);
+  DS.segAngle = DS.segAngle(:,segInMask);
+  DS.ctrAngle = DS.ctrAngle(:,segInMask);
   DS.segDiameters = DS.segDiameters(:,segInMask);
 
   % only keep data for wanted vessels
@@ -74,17 +83,36 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
   
   % correct scalar values
-  DS.area = sum(mask(:)); 
   DS.totalLength = sum(DS.lengthCum(:));
-  DS.lengthFraction = DS.totalLength./DS.area; 
-  if DS.lengthFraction > 1
-    short_warn('we have more vessels than the image size...');
-  end
   DS.nVessel = sum(vesInMask(:));
   DS.nSegments = sum(segInMask(:));
   DS.nBranches = sum(branchInMask(:));
+  
+  DS.area = sum(fullMask(:)); % size of entire, old wound area
   DS.vesselDensity = DS.nVessel./DS.area;
   DS.branchDensity = DS.nBranches./DS.area;
+  DS.lengthFraction = DS.totalLength./DS.area;
+  if DS.lengthFraction > 1
+    short_warn('we have more vessels than the image size...');
+  end
+
+  DS.growthArea = sum(mask(:)); % size of area where vessels are growing 
+  DS.vesselGrowthDensity = DS.nVessel./DS.growthArea;
+  DS.branchGrowthDensity = DS.nBranches./DS.growthArea;
+  DS.lengthGrowthFraction = DS.totalLength./DS.growthArea;
+  
+  % get some simple overall statistics, so we don't have to extract them from the
+  % table later...
+  DS.meanDiameter = mean(DS.segDiameters);
+  DS.meanLength = mean(DS.lengthCum);
+  DS.meanTurtosity = mean(DS.turtosity);
+  DS.meanCtrAngle = mean(DS.ctrAngle);
+
+  DS.medianDiameter = median(DS.vesDiameter);
+  DS.medianLength = median(DS.lengthCum);
+  DS.medianTurtosity = median(DS.turtosity);
+  DS.medianCtrAngle = median(DS.ctrAngle);
+
 
   % done, lets print some info
   AVA.Done(startTic);
@@ -143,6 +171,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
       markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
     title('Removed / Kept Branches');
 
+    
 
     done(toc);
   end
