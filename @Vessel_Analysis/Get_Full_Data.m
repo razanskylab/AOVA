@@ -35,6 +35,10 @@ function [DS] = Get_Full_Data(AVA)
   % medianLength
   % medianTurtosity
   % medianCtrAngle
+  % growthArea  % size of area where vessels are growing 
+  % vesselGrowthDensity 
+  % branchGrowthDensity 
+  % lengthGrowthFraction 
   %
   % TODO calculate total vessel area and coverage 
   % (vessel segment length * diameter? / total area)
