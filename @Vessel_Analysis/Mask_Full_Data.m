@@ -75,10 +75,12 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   DS.ctrAngle = DS.ctrAngle(:,segInMask);
 
   % only keep data for wanted vessels
-  DS.vesCenter = DS.vesCenter(:,vesInMask); 
-  DS.turtosity = DS.turtosity(:,vesInMask); 
-  DS.vesDiameter = DS.vesDiameter(:,vesInMask); 
+  DS.lengthStraight = DS.lengthStraight(:,vesInMask); 
   DS.lengthCum = DS.lengthCum(:,vesInMask); 
+  DS.turtosity = DS.turtosity(:,vesInMask); 
+  DS.vesCenter = DS.vesCenter(:,vesInMask); 
+  DS.vesCtrDistance = DS.vesCtrDistance(:,vesInMask); 
+  DS.vesDiameter = DS.vesDiameter(:,vesInMask); 
   
   % only keep data for wanted branches
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
