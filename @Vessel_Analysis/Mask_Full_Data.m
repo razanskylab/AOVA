@@ -68,10 +68,11 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
 
   % only keep data for wanted segments
   DS.segCenter = DS.segCenter(:,segInMask); 
+  DS.segCtrDistance = DS.segCtrDistance(:,segInMask); 
+  DS.segDiameters = DS.segDiameters(:,segInMask);
   DS.angles = DS.angles(:,segInMask);
   DS.segAngle = DS.segAngle(:,segInMask);
   DS.ctrAngle = DS.ctrAngle(:,segInMask);
-  DS.segDiameters = DS.segDiameters(:,segInMask);
 
   % only keep data for wanted vessels
   DS.vesCenter = DS.vesCenter(:,vesInMask); 

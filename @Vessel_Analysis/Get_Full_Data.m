@@ -3,29 +3,27 @@ function [DS] = Get_Full_Data(AVA)
   % not good for plotting, as we loose the information which vessel segments 
   % belong together... 
   % we extract the following info
-  % DS.area
-  % DS.imageCenter
-  % DS.totalLength
-  % DS.nVessel
-  % DS.nSegments
-  % DS.nBranches
-  % DS.vesselDensity
-  % DS.branchDensity
-  % DS.branchCenter
-  % DS.segCenter
-  % DS.segCtrDistance
-  % DS.segDiameters
-  % DS.segAngle
-  % DS.angles
-  % DS.ctrAngle
-  % DS.lengthStraight
-  % DS.lengthCum
-  % DS.turtosity
-  % DS.vesCenter
-  % DS.vesCtrDistance
-  % DS.vesDiameter
-  % 
-  % recently added stats: 
+  % area
+  % imageCenter
+  % totalLength
+  % nVessel
+  % nSegments
+  % nBranches
+  % vesselDensity
+  % branchDensity
+  % branchCenter
+  % segCenter
+  % segCtrDistance
+  % segDiameters
+  % segAngle
+  % angles
+  % ctrAngle
+  % lengthStraight
+  % lengthCum
+  % turtosity
+  % vesCenter
+  % vesCtrDistance
+  % vesDiameter
   % lengthFraction
   % meanDiameter
   % meanLength
@@ -108,7 +106,7 @@ function [DS] = Get_Full_Data(AVA)
   DS.meanTurtosity = mean(DS.turtosity);
   DS.meanCtrAngle = mean(DS.ctrAngle);
 
-  DS.medianDiameter = median(DS.vesDiameter);
+  DS.medianDiameter = median(DS.segDiameters);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
   DS.medianCtrAngle = median(DS.ctrAngle);
