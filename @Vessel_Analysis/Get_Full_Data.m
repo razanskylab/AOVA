@@ -94,6 +94,9 @@ function [DS] = Get_Full_Data(AVA)
   DS.area = AVA.imageArea;
   DS.vesselDensity = AVA.vesselDensity;
   DS.imageCenter = AVA.imageCenter;
+  [nY,nX] = size(AVA.xy);
+  DS.imageSize = [nX nY];
+
   DS.lengthFraction = DS.totalLength./DS.area; 
   if DS.lengthFraction > 1
     short_warn('we have more vessels than the image size...');
