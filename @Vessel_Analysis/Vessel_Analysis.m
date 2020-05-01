@@ -25,6 +25,7 @@ classdef Vessel_Analysis < BaseClass
 
     % plotting options ---------------------------------------------------------
     useUnits = true; % plot using units not index if possbile
+    pxToMu = 1; % one pixel corresponds to this many microns
   end
 
   properties (SetAccess = private)

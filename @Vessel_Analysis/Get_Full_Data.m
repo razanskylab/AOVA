@@ -1,4 +1,5 @@
 function [DS] = Get_Full_Data(AVA)
+  pxToMu = AVA.pxToMu;
   % extracts vessel data in an easier to process way for statistics
   % not good for plotting, as we loose the information which vessel segments 
   % belong together... 
@@ -15,9 +16,9 @@ function [DS] = Get_Full_Data(AVA)
   % segCenter
   % segCtrDistance
   % segDiameters
-  % segAngle
-  % angles
-  % ctrAngle
+  % centerAngle
+  % segAngles
+  % angleDiff
   % lengthStraight
   % lengthCum
   % turtosity
@@ -63,19 +64,28 @@ function [DS] = Get_Full_Data(AVA)
   % diameter of ind. segments  
   DS.segDiameters = cellfun(fun, {vList.diameters}, 'UniformOutput', false);
   DS.segDiameters = cell2mat(DS.segDiameters')';
+  DS.segDiameters = DS.segDiameters.*pxToMu;
 
   % get angle the segment SHOULD have when pointing at image center point
-  DS.segAngle = rad2deg(atan((DS.segCenter(1,:)-xCtr)./(DS.segCenter(2,:)-yCtr)));
+  xDist = DS.segCenter(1,:)-xCtr;
+  yDist = DS.segCenter(2,:)-yCtr;
+  centerAngle = atan2d(xDist,yDist);
+  centerAngle(centerAngle > 90) = centerAngle(centerAngle > 90) - 180; % only use +/- 90 deg
+  centerAngle(centerAngle < -90) = centerAngle(centerAngle < -90) + 180; % only use +/- 90 deg
+  DS.centerAngle = centerAngle;
 
   % extract the actual angle that the individual vessel segment had
   unitVectors = cellfun(fun, {vList.angles}, 'UniformOutput', false);
   unitVectors = cell2mat(unitVectors');
-  DS.angles = atan2d(unitVectors(:, 2), unitVectors(:, 1))';
-  DS.angles(DS.angles > 90) = DS.angles(DS.angles > 90) - 180; % only use +/- 90 deg
-  DS.angles(DS.angles < -90) = DS.angles(DS.angles < -90) + 180; % only use +/- 90 deg
+  DS.segAngles = -atan2d(unitVectors(:, 2), unitVectors(:, 1))';
+  DS.segAngles(DS.segAngles > 90) = DS.segAngles(DS.segAngles > 90) - 180; % only use +/- 90 deg
+  DS.segAngles(DS.segAngles < -90) = DS.segAngles(DS.segAngles < -90) + 180; % only use +/- 90 deg
   
   % calculate difference between target and actual angle
-  DS.ctrAngle = DS.angles-DS.segAngle; 
+  angleDiff = DS.segAngles - DS.centerAngle; 
+  angleDiff(angleDiff > 90) = 180 - angleDiff(angleDiff > 90);
+  angleDiff(angleDiff < -90) = 180 + angleDiff(angleDiff < -90); % only use +/- 90 deg
+  DS.angleDiff = abs(angleDiff);
 
   % get vessel data ------------------------------------------------------------
   DS.lengthStraight = [vList(:, 1).length_straight_line];
@@ -91,33 +101,44 @@ function [DS] = Get_Full_Data(AVA)
   DS.nVessel = AVA.nVessels;
   DS.nSegments = AVA.nSegments;
   
-  DS.area = AVA.imageArea;
-  DS.vesselDensity = AVA.vesselDensity;
-  DS.imageCenter = AVA.imageCenter;
-  [nY,nX] = size(AVA.xy);
-  DS.imageSize = [nX nY];
+  DS.area = AVA.imageArea.*pxToMu^2;
+  DS.vesselDensity = DS.nVessel./DS.area;
+
+  DS.segCtrDistance = DS.segCtrDistance.*pxToMu;
+  DS.segDiameters = DS.segDiameters.*pxToMu;
+  DS.lengthStraight = DS.lengthStraight .*pxToMu;
+  DS.lengthCum = DS.lengthCum.*pxToMu;
+  DS.vesCtrDistance = DS.vesCtrDistance.*pxToMu;
+  DS.vesDiameter =  DS.vesDiameter.*pxToMu;
+  DS.totalLength = DS.totalLength.*pxToMu;
+  DS.vesselDensity = AVA.vesselDensity.*pxToMu;
 
   DS.lengthFraction = DS.totalLength./DS.area; 
   if DS.lengthFraction > 1
     short_warn('we have more vessels than the image size...');
   end
 
+  % NOTE imageCenter stays in Pixel for various reasons related to plotting...
+  DS.imageCenter = AVA.imageCenter; 
+  [nY,nX] = size(AVA.xy);
+  DS.imageSize = [nX nY];
+
   % get some simple overall statistics, so we don't have to extract them from the
   % table later...
   DS.meanDiameter = mean(DS.segDiameters);
   DS.meanLength = mean(DS.lengthCum);
   DS.meanTurtosity = mean(DS.turtosity);
-  DS.meanCtrAngle = mean(DS.ctrAngle);
+  DS.meanCtrAngle = mean(DS.angleDiff);
 
   DS.medianDiameter = median(DS.segDiameters);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
-  DS.medianCtrAngle = median(DS.ctrAngle);
+  DS.medianCtrAngle = median(DS.angleDiff);
 
   % branch related 
   % first get into correct shape to match (x1,y1; x2, y2) form like other centers
   DS.nBranches = AVA.nBranches;
-  DS.branchDensity = AVA.branchDensity;
+  DS.branchDensity = DS.nBranches./DS.area;
   DS.branchCenter = AVA.Data.branchCenters';
   DS.branchCenter = flipud(DS.branchCenter);
   AVA.Done(startTic);
@@ -129,5 +150,43 @@ function [DS] = Get_Full_Data(AVA)
   DS.branchGrowthDensity = [];
   DS.lengthGrowthFraction = [];
   
+  
+  % if AVA.verbosePlotting
+  %   tic;
+  %   AVA.PrintF('[Get_Full_Data] Generating debug plot...');
+
+  %   dFig = figure();
+  %   TL = tiledlayout(dFig,'flow');
+  %   TL.Padding = 'compact'; % remove uneccesary white space...
+
+  %   nexttile();
+  %   imagescj(AVA.xy); axis off;  colorbar off;
+  %   hold on;
+  %   markerSize = 10;
+  %   scatter(DS.segCenter(2,:),DS.segCenter(1,:),...
+  %     markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
+  %   title('Segments');
+
+  %   % nexttile();
+  %   % imagescj(AVA.xy); axis off; colorbar off;
+  %   % hold on;
+  %   % scatter(remVesCenter(2,:),remVesCenter(1,:),...
+  %   %   markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
+  %   % scatter(DS.vesCenter(2,:),DS.vesCenter(1,:),...
+  %   %   markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
+  %   % title('Removed / Kept Vessels');
+
+  %   % nexttile();
+  %   % imagescj(AVA.xy); axis off; colorbar off;
+  %   % hold on;
+  %   % scatter(remBranchCenter(2,:),remBranchCenter(1,:),...
+  %   %   markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
+  %   % scatter(DS.branchCenter(2,:),DS.branchCenter(1,:),...
+  %   %   markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
+  %   % title('Removed / Kept Branches');
+
+  %   done(toc);
+  % end
+
 end
 
