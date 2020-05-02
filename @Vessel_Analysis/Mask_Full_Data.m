@@ -110,13 +110,12 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   DS.meanDiameter = mean(DS.segDiameters);
   DS.meanLength = mean(DS.lengthCum);
   DS.meanTurtosity = mean(DS.turtosity);
-  DS.meanCtrAngle = mean(DS.angleDiff);
+  DS.meanAngleDiff = mean(DS.angleDiff);
 
   DS.medianDiameter = median(DS.vesDiameter);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
-  DS.medianCtrAngle = median(DS.angleDiff);
-
+  DS.medianAngleDiff = median(DS.angleDiff);
 
   % done, lets print some info
   AVA.Done(startTic);

@@ -29,11 +29,11 @@ function [DS] = Get_Full_Data(AVA)
   % meanDiameter
   % meanLength
   % meanTurtosity
-  % meanCtrAngle
+  % meanAngleDiff
   % medianDiameter
   % medianLength
   % medianTurtosity
-  % medianCtrAngle
+  % medianAngleDiff
   % growthArea  % size of area where vessels are growing 
   % vesselGrowthDensity 
   % branchGrowthDensity 
@@ -59,7 +59,7 @@ function [DS] = Get_Full_Data(AVA)
   DS.segCenter = cellfun(fun, {vList.centre}, 'UniformOutput', false);
   DS.segCenter = cell2mat(DS.segCenter')'; 
   % distance of ind. segments to center
-  DS.segCtrDistance = sqrt((DS.segCenter(1,:)-xCtr).^2 + (DS.segCenter(2,:)-yCtr).^2);
+  DS.segCtrDistance = sqrt((DS.segCenter(2,:)-xCtr).^2 + (DS.segCenter(1,:)-yCtr).^2);
 
   % diameter of ind. segments  
   DS.segDiameters = cellfun(fun, {vList.diameters}, 'UniformOutput', false);
@@ -128,12 +128,12 @@ function [DS] = Get_Full_Data(AVA)
   DS.meanDiameter = mean(DS.segDiameters);
   DS.meanLength = mean(DS.lengthCum);
   DS.meanTurtosity = mean(DS.turtosity);
-  DS.meanCtrAngle = mean(DS.angleDiff);
+  DS.meanAngleDiff = mean(DS.angleDiff);
 
   DS.medianDiameter = median(DS.segDiameters);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
-  DS.medianCtrAngle = median(DS.angleDiff);
+  DS.medianAngleDiff = median(DS.angleDiff);
 
   % branch related 
   % first get into correct shape to match (x1,y1; x2, y2) form like other centers
