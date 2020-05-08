@@ -43,6 +43,9 @@ classdef Vessel_Analysis < BaseClass
     branchDensity(1, 1) {mustBeNumeric};
     averageDiameters(1,:) {mustBeNumeric};
     averageCenters(1,:) {mustBeNumeric};
+    angleRanges(1,:) {mustBeNumeric}; % range of angle values per vessel
+    angleStd(1,:) {mustBeNumeric}; % std of angle values per vessel
+    angleChange(1,:) {mustBeNumeric}; % median diff of angle values per vessel
   end
 
 
@@ -221,6 +224,51 @@ classdef Vessel_Analysis < BaseClass
         averageCenters(:,iVessel) = mean(AVA.Data.vessel_list(iVessel).centre);
       end
     end
+
+    function angleRanges = get.angleRanges(AVA)
+      fun = @(x) cat(1, x);
+      unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        tempUnits = unitVectors{iVessel};
+        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
+        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
+        % angles(angles < -90) = angles(angles < -90) + 180;
+        angleRanges(:,iVessel) = range(angles);
+      end
+    end
+
+    function angleStd = get.angleStd(AVA)
+      fun = @(x) cat(1, x);
+      unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        tempUnits = unitVectors{iVessel};
+        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
+        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
+        % angles(angles < -90) = angles(angles < -90) + 180;
+        angleStd(:,iVessel) = std(angles);
+      end
+    end
+
+    function angleChange = get.angleChange(AVA)
+      fun = @(x) cat(1, x);
+      unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        tempUnits = unitVectors{iVessel};
+        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
+        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
+        % angles(angles < -90) = angles(angles < -90) + 180;
+        angleChange(:,iVessel) = median(abs(diff(angles)));
+      end
+    end
+
   end
 
 end 
+
+
+  % % extract the actual angle that the individual vessel segment had
+  % unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+  % unitVectors = cell2mat(unitVectors');
+  % DS.segAngles = -atan2d(unitVectors(:, 2), unitVectors(:, 1))';
+  % DS.segAngles(DS.segAngles > 90) = DS.segAngles(DS.segAngles > 90) - 180; % only use +/- 90 deg
+  % DS.segAngles(DS.segAngles < -90) = DS.segAngles(DS.segAngles < -90) + 180; % only use +/- 90 deg
