@@ -46,6 +46,7 @@ classdef Vessel_Analysis < BaseClass
     angleRanges(1,:) {mustBeNumeric}; % range of angle values per vessel
     angleStd(1,:) {mustBeNumeric}; % std of angle values per vessel
     angleChange(1,:) {mustBeNumeric}; % median diff of angle values per vessel
+    segDistanceChange(1,:) {mustBeNumeric};
   end
 
 
@@ -229,10 +230,8 @@ classdef Vessel_Analysis < BaseClass
       fun = @(x) cat(1, x);
       unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
       for iVessel = AVA.nVessels:-1:1
-        tempUnits = unitVectors{iVessel};
-        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
-        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
-        % angles(angles < -90) = angles(angles < -90) + 180;
+        iUnitVec = unitVectors{iVessel};
+        angles = -atan2d(iUnitVec(:, 2), iUnitVec(:, 1))';
         angleRanges(:,iVessel) = range(angles);
       end
     end
@@ -241,23 +240,38 @@ classdef Vessel_Analysis < BaseClass
       fun = @(x) cat(1, x);
       unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
       for iVessel = AVA.nVessels:-1:1
-        tempUnits = unitVectors{iVessel};
-        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
-        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
-        % angles(angles < -90) = angles(angles < -90) + 180;
+        iUnitVec = unitVectors{iVessel};
+        angles = -atan2d(iUnitVec(:, 2), iUnitVec(:, 1))';
         angleStd(:,iVessel) = std(angles);
       end
     end
 
+    % get angle change per unit (pixel/micron/etc)
     function angleChange = get.angleChange(AVA)
       fun = @(x) cat(1, x);
       unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      centers = cellfun(fun, {AVA.Data.vessel_list.centre}, 'UniformOutput', false);
       for iVessel = AVA.nVessels:-1:1
-        tempUnits = unitVectors{iVessel};
-        angles = -atan2d(tempUnits(:, 2), tempUnits(:, 1))';
-        % angles(angles > 90) = angles(angles > 90) - 180; % only use +/- 90 deg
-        % angles(angles < -90) = angles(angles < -90) + 180;
-        angleChange(:,iVessel) = median(abs(diff(angles)));
+        iUnitVec = unitVectors{iVessel};
+        iCenters = centers{iVessel};
+        iDiff = diff(iCenters);
+        iDistances = sqrt(iDiff(:,1).^2 + iDiff(:,2).^2).*AVA.pxToMu;
+        iAngles = -atan2d(iUnitVec(:, 2), iUnitVec(:, 1))';
+        iAngleChanges = abs(diff(iAngles));
+        iAngleChange = iAngleChanges(:)./iDistances(:); % da / dr
+        angleChange(:,iVessel) = mean(iAngleChange);
+      end
+    end
+
+    % mostly for debugging
+    function segDistanceChange = get.segDistanceChange(AVA)
+      fun = @(x) cat(1, x);
+      centers = cellfun(fun, {AVA.Data.vessel_list.centre}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        iCenters = centers{iVessel};
+        iDiff = diff(iCenters);
+        iDistances = sqrt(iDiff(:,1).^2 + iDiff(:,2).^2).*AVA.pxToMu;
+        segDistanceChange(:,iVessel) = mean(iDistances);
       end
     end
 

@@ -68,18 +68,21 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   % only keep data for wanted segments
   DS.segCenter = DS.segCenter(:,segInMask); 
   DS.segCtrDistance = DS.segCtrDistance(:,segInMask); 
-  DS.segDiameters = DS.segDiameters(:,segInMask);
+  DS.segDiameters = DS.segDiameters(segInMask);
   DS.segAngles = DS.segAngles(:,segInMask);
   DS.centerAngle = DS.centerAngle(:,segInMask);
-  DS.angleDiff = DS.angleDiff(:,segInMask);
+  DS.angleDiff = DS.angleDiff(segInMask);
 
   % only keep data for wanted vessels
-  DS.lengthStraight = DS.lengthStraight(:,vesInMask); 
-  DS.lengthCum = DS.lengthCum(:,vesInMask); 
-  DS.turtosity = DS.turtosity(:,vesInMask); 
+  DS.lengthStraight = DS.lengthStraight(vesInMask); 
+  DS.lengthCum = DS.lengthCum(vesInMask); 
+  DS.turtosity = DS.turtosity(vesInMask); 
   DS.vesCenter = DS.vesCenter(:,vesInMask); 
   DS.vesCtrDistance = DS.vesCtrDistance(:,vesInMask); 
-  DS.vesDiameter = DS.vesDiameter(:,vesInMask); 
+  DS.vesDiameter = DS.vesDiameter(vesInMask); 
+  DS.angleRanges = DS.angleRanges(vesInMask);  
+  DS.angleStd = DS.angleStd(vesInMask);
+  DS.angleChange = DS.angleChange(vesInMask);
   
   % only keep data for wanted branches
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
@@ -111,11 +114,13 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   DS.meanLength = mean(DS.lengthCum);
   DS.meanTurtosity = mean(DS.turtosity);
   DS.meanAngleDiff = mean(DS.angleDiff);
+  DS.meanAngleChange = mean(DS.angleChange);
 
   DS.medianDiameter = median(DS.vesDiameter);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
   DS.medianAngleDiff = median(DS.angleDiff);
+  DS.medianAngleChange = median(DS.angleChange);
 
   % done, lets print some info
   AVA.Done(startTic);

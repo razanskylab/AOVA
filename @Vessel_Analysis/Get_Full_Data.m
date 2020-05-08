@@ -43,7 +43,6 @@ function [DS] = Get_Full_Data(AVA)
   % (vessel segment length * diameter? / total area)
   % TODO make sure that what we are doing here makes sense
 
-  % TODO transfer angleRanges and angleWiggle to table
   startTic = tic;
   AVA.VPrintF('Collecting full vessel, segment and branch data...')
 
@@ -98,6 +97,10 @@ function [DS] = Get_Full_Data(AVA)
   DS.vesCtrDistance = sqrt((DS.vesCenter(1,:)-xCtr).^2 + (DS.vesCenter(2,:)-yCtr).^2);
   DS.vesDiameter = AVA.averageDiameters; % average diameter of each vessel
 
+  DS.angleRanges = AVA.angleRanges;  
+  DS.angleStd = AVA.angleStd;
+  DS.angleChange = AVA.angleChange;
+
   % get general data (scalar) --------------------------------------------------
   DS.totalLength = sum(DS.lengthCum);
   DS.nVessel = AVA.nVessels;
@@ -131,14 +134,14 @@ function [DS] = Get_Full_Data(AVA)
   DS.meanLength = mean(DS.lengthCum);
   DS.meanTurtosity = mean(DS.turtosity);
   DS.meanAngleDiff = mean(DS.angleDiff);
+  DS.meanAngleChange = mean(DS.angleChange);
 
   DS.medianDiameter = median(DS.segDiameters);
   DS.medianLength = median(DS.lengthCum);
   DS.medianTurtosity = median(DS.turtosity);
   DS.medianAngleDiff = median(DS.angleDiff);
-  DS.angleRanges = AVA.angleRanges;
-  DS.angleStd = AVA.angleStd;
-  DS.angleChange = AVA.angleChange;
+  DS.medianAngleChange = median(DS.angleChange);
+
 
   % branch related 
   % first get into correct shape to match (x1,y1; x2, y2) form like other centers

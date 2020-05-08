@@ -1,6 +1,9 @@
-function Plot_Data_Overlay(AVA, whatOverlay)
+function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
   if nargin < 2
     whatOverlay = 'diameter';
+  end
+  if nargin < 3
+    plotSize = 16;
   end
   
   vList = AVA.Data.vessel_list;
@@ -58,6 +61,10 @@ function Plot_Data_Overlay(AVA, whatOverlay)
     nColors = 45;
     data = AVA.angleChange;
     dataColorMap = brewermap(nColors,  '*RdYlGn'); % low values red, high values white
+  case 'segDistanceChange' % per vessel
+    nColors = 45;
+    data = AVA.segDistanceChange;
+    dataColorMap = brewermap(nColors,  '*RdYlGn'); % low values red, high values white
   end
 
   switch whatOverlay
@@ -80,25 +87,25 @@ function Plot_Data_Overlay(AVA, whatOverlay)
   end
 
   % plotImage = normalize(adapthisteq(normalize(AVA.xy), 'ClipLimit', 0.02));
-  plotImage = normalize(AVA.xy);
-  indexImage = gray2ind(plotImage, nColors);
-  rgbImage = ind2rgb(indexImage, cMap);
-  imagesc(rgbImage); 
+  if ~isempty(AVA.xy)
+    plotImage = normalize(AVA.xy);
+    indexImage = gray2ind(plotImage, nColors);
+    rgbImage = ind2rgb(indexImage, cMap);
+    imagesc(rgbImage); 
+  end
   axis image; 
-  title(whatOverlay);
-
+  
   % now we can display whatever colorbar we want, it will not affect the xy map
   colormap(gca, dataColorMap);
-
+  
   holdfig = ishold; % Get hold state
   hold on;
-  areaScaling = 10;
   % loop trough all colors and plot
-  if ~strcmp(whatOverlay, {'turtuosity','angleRanges','angleStd','angleChange'})
+  if strcmp(whatOverlay, {'diameter','aangle'})
     for iColor = 1:nColors
       plotCenters = centers(groups == iColor, :);
       if ~isempty(plotCenters)
-        scatter(plotCenters(:, 2), plotCenters(:, 1), areaScaling, 'MarkerFaceColor', dataColorMap(iColor, :), 'MarkerEdgeColor', 'none');
+        scatter(plotCenters(:, 2), plotCenters(:, 1), plotSize, 'MarkerFaceColor', dataColorMap(iColor, :), 'MarkerEdgeColor', 'none');
       end
     end
   else
@@ -108,11 +115,12 @@ function Plot_Data_Overlay(AVA, whatOverlay)
         fun = @(x) cat(1, x, [nan, nan]);
         temp = cellfun(fun, {plotVessels.centre}, 'UniformOutput', false);
         plotCenters = cell2mat(temp');
-        line(plotCenters(:, 2), plotCenters(:, 1), 'LineStyle', '-', 'Color', dataColorMap(iColor, :), 'linewidth', 2);
+        line(plotCenters(:, 2), plotCenters(:, 1), 'LineStyle', '-', 'Color', dataColorMap(iColor, :), 'linewidth', sqrt(plotSize));
+        % scatter(plotCenters(:, 2), plotCenters(:, 1), 'k.');
       end
     end
   end 
-
+  
   CBar = colorbar();
   nDepthLabels = 9;
   tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
@@ -123,11 +131,12 @@ function Plot_Data_Overlay(AVA, whatOverlay)
   CBar.TickLength = 0;
   CBar.Ticks = tickLocations;
   CBar.TickLabels = zLabels;
-
+  
   if not(holdfig)
     hold off;
   end % Restore hold state
   axis off;
-
+  title(whatOverlay);
+  
 
 end
