@@ -71,12 +71,9 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
   case 'angle' % per vessel-segment
     % nothing to do
   otherwise % remove outlier
-    % keep 5_
-    lowLim = prctile(data,5); 
-    upLim = prctile(data,95); 
-    data(data>upLim) = upLim;
-    data(data<lowLim) = lowLim;
+    [data] = wrap_outlier_data(data,[0 95]);
   end
+  mean(data)
   groups = discretize(data, nColors);
   centers = cellfun(fun, {vList.centre}, 'UniformOutput', false);
   centers = cell2mat(centers');
