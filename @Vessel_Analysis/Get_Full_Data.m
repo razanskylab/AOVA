@@ -65,7 +65,6 @@ function [DS] = Get_Full_Data(AVA)
   % diameter of ind. segments  
   DS.segDiameters = cellfun(fun, {vList.diameters}, 'UniformOutput', false);
   DS.segDiameters = cell2mat(DS.segDiameters')';
-  DS.segDiameters = DS.segDiameters.*pxToMu;
 
   % get angle the segment SHOULD have when pointing at image center point
   xDist = DS.segCenter(1,:)-xCtr;
@@ -87,6 +86,12 @@ function [DS] = Get_Full_Data(AVA)
   angleDiff(angleDiff > 90) = 180 - angleDiff(angleDiff > 90);
   angleDiff(angleDiff < -90) = 180 + angleDiff(angleDiff < -90); % only use +/- 90 deg
   DS.angleDiff = abs(angleDiff);
+  % random alignment => mean(angleDiff) == 45
+  % difference to 45deg is aligment, i.e. 45 - 25 = 20 deg
+  % 0 == no alignment, 45 == max alignment
+  % normalize -> 0 = 0% alignment, 45 = 100% alignment
+  % keyboard
+  DS.angleAlign = (45-DS.angleDiff)./45;
 
   % get vessel data ------------------------------------------------------------
   DS.lengthStraight = [vList(:, 1).length_straight_line];
@@ -109,6 +114,7 @@ function [DS] = Get_Full_Data(AVA)
   DS.area = AVA.imageArea.*pxToMu^2;
   DS.vesselDensity = DS.nVessel./DS.area;
 
+  % convert to microns
   DS.segCtrDistance = DS.segCtrDistance.*pxToMu;
   DS.segDiameters = DS.segDiameters.*pxToMu;
   DS.lengthStraight = DS.lengthStraight .*pxToMu;

@@ -72,6 +72,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   DS.segAngles = DS.segAngles(:,segInMask);
   DS.centerAngle = DS.centerAngle(:,segInMask);
   DS.angleDiff = DS.angleDiff(segInMask);
+  DS.angleAlign = DS.angleAlign(segInMask);
 
   % only keep data for wanted vessels
   DS.lengthStraight = DS.lengthStraight(vesInMask); 
@@ -110,17 +111,19 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   
   % get some simple overall statistics, so we don't have to extract them from the
   % table later...
-  DS.meanDiameter = mean(DS.segDiameters);
-  DS.meanLength = mean(DS.lengthCum);
-  DS.meanTurtosity = mean(DS.turtosity);
-  DS.meanAngleDiff = mean(DS.angleDiff);
-  DS.meanAngleChange = mean(DS.angleChange);
+  DS.meanDiameter =     mean(DS.segDiameters);
+  DS.meanLength =       mean(DS.lengthCum);
+  DS.meanTurtosity =    mean(DS.turtosity);
+  DS.meanAngleDiff =    mean(DS.angleDiff);
+  DS.meanAngleAlign =   mean(DS.angleAlign);
+  DS.meanAngleChange =  mean(DS.angleChange);
 
-  DS.medianDiameter = median(DS.vesDiameter);
-  DS.medianLength = median(DS.lengthCum);
-  DS.medianTurtosity = median(DS.turtosity);
-  DS.medianAngleDiff = median(DS.angleDiff);
-  DS.medianAngleChange = median(DS.angleChange);
+  DS.medianDiameter =     median(DS.vesDiameter);
+  DS.medianLength =       median(DS.lengthCum);
+  DS.medianTurtosity =    median(DS.turtosity);
+  DS.medianAngleDiff =    median(DS.angleDiff);
+  DS.medianAngleAlign =   median(DS.angleAlign);
+  DS.medianAngleChange =  median(DS.angleChange);
 
   % done, lets print some info
   AVA.Done(startTic);
@@ -136,7 +139,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   AVA.VPrintF('   Removed %i (%2.2f %%) segments.\n',segRemovedAbs,segRemovedPer);
   AVA.VPrintF('   Removed %i (%2.2f %%) branchpoints.\n',branchRemovedAbs,branchRemovedPer);
 
-  if AVA.verbosePlotting && 0
+  if AVA.verbosePlotting && 1
     tic;
     AVA.PrintF('[Mask_Full_Data] Generating debug plot...');
 
@@ -173,7 +176,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
     title('Removed / Kept Vessels');
   end
 
-  if AVA.verbosePlotting 
+  if AVA.verbosePlotting && 0
 
     % plot vessel segAngles-------------------------------------------------------
     figure()
@@ -196,23 +199,6 @@ function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
     CBar.Ticks = tickLocations;
     CBar.TickLabels = zLabels;
     title('measure angle');
-
-    % t = nexttile();
-    % data =  DS.centerAngle;
-    % center = DS.segCenter;
-    % scatter_plot_vessel_segments(center,data,cMap,10,0.75);
-    % colormap(t,cMap);
-    % CBar = colorbar(t);
-    % nDepthLabels = 9;
-    % tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
-    % tickValues = linspace(min(data), max(data), nDepthLabels);
-    % for iLabel = nDepthLabels:-1:1
-    %   zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
-    % end
-    % CBar.TickLength = 0;
-    % CBar.Ticks = tickLocations;
-    % CBar.TickLabels = zLabels;
-    % title('target angle');
 
     t = nexttile();
     cMap = make_linear_colormap(Colors.PureRed,Colors.BrightGreen,20);

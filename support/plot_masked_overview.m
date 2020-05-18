@@ -38,49 +38,48 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
   plot_crosshair(imCenter,[0 0 1]); 
   title('Mask Overlay');
 
+  if 0 % show angle and crosshair?
+    th3 = nexttile();
+    cMap = cmocean('phase', 9);
+    data =  DataStruct.segAngles;
+    center = DataStruct.segCenter;
+    scatter_plot_vessel_segments(center,data,cMap,10,0.75);
+    colormap(th3,cMap);
+    CBar = colorbar(th3);
+    nDepthLabels = 9;
+    tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
+    tickValues = linspace(-90, 90, nDepthLabels);
+    for iLabel = nDepthLabels:-1:1
+      zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    end
+    CBar.TickLength = 0;
+    CBar.Ticks = tickLocations;
+    CBar.TickLabels = zLabels;
+    title('measure angle');
+    hold on;
+    plot_crosshair(imCenter,[0 0 1]); 
 
-  th3 = nexttile();
-  cMap = cmocean('phase', 9);
-  data =  DataStruct.segAngles;
-  center = DataStruct.segCenter;
-  scatter_plot_vessel_segments(center,data,cMap,10,0.75);
-  colormap(th3,cMap);
-  CBar = colorbar(th3);
-  nDepthLabels = 9;
-  tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
-  tickValues = linspace(-90, 90, nDepthLabels);
-  for iLabel = nDepthLabels:-1:1
-    zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    th4 = nexttile();
+    cMap = brewermap(64, 'OrRd'); % low values red, high values white
+    data =  DataStruct.angleDiff;
+    center = DataStruct.segCenter;
+    scatter_plot_vessel_segments(center,data,cMap,10,0.75);
+    colormap(th4,cMap);
+    CBar = colorbar(th4);
+    nDepthLabels = 9;
+    tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
+    tickValues = linspace(min(data), max(data), nDepthLabels);
+    for iLabel = nDepthLabels:-1:1
+      zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    end
+    CBar.TickLength = 0;
+    CBar.Ticks = tickLocations;
+    CBar.TickLabels = zLabels;
+    title('measure angle');
+    hold on;
+    plot_crosshair(imCenter,[0 0 1]); 
+    linkaxes([th1, th2, th3, th4]);
   end
-  CBar.TickLength = 0;
-  CBar.Ticks = tickLocations;
-  CBar.TickLabels = zLabels;
-  title('measure angle');
-  hold on;
-  plot_crosshair(imCenter,[0 0 1]); 
-
-  th4 = nexttile();
-  cMap = brewermap(64, 'OrRd'); % low values red, high values white
-  data =  DataStruct.angleDiff;
-  center = DataStruct.segCenter;
-  scatter_plot_vessel_segments(center,data,cMap,10,0.75);
-  colormap(th4,cMap);
-  CBar = colorbar(th4);
-  nDepthLabels = 9;
-  tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
-  tickValues = linspace(min(data), max(data), nDepthLabels);
-  for iLabel = nDepthLabels:-1:1
-    zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
-  end
-  CBar.TickLength = 0;
-  CBar.Ticks = tickLocations;
-  CBar.TickLabels = zLabels;
-  title('measure angle');
-  hold on;
-  plot_crosshair(imCenter,[0 0 1]); 
-
-
-  linkaxes([th1, th2, th3, th4]);
 
   if nargout
     fH = [f1];
