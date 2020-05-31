@@ -1,5 +1,12 @@
-function [DS] = Mask_Full_Data(AVA,DS,mask)
+function [DS] = Mask_Full_Data(AVA,DS,mask,fullMask)
   % keep data where mask == true
+  % if mask has a whole (like in wound data) but the area should be 
+  % calculated without the hole, then supply the fullMask with the correct 
+  % area...
+
+  if (nargin < 4)
+    fullMask = mask;
+  end
 
   startTic = tic;
   AVA.VPrintF('Masking vessel, segment and branch data...')
@@ -17,12 +24,12 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
     mask = logical(mask);
   end
 
-  if sum(mask(:)) == numel(mask)
-    AVA.VPrintF('\n');
-    short_warn('[AVA:Mask_Full_Data] Mask == True everywhere!');
-    short_warn('[AVA:Mask_Full_Data] Nothing to do...');
-    return;
-  end
+  % if sum(mask(:)) == numel(mask)
+  %   AVA.VPrintF('\n');
+  %   short_warn('[AVA:Mask_Full_Data] Mask == True everywhere!');
+  %   short_warn('[AVA:Mask_Full_Data] Nothing to do...');
+  %   return;
+  % end
 
   if sum(mask(:)) == 0
     AVA.VPrintF('\n');
@@ -61,30 +68,56 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
 
   % only keep data for wanted segments
   DS.segCenter = DS.segCenter(:,segInMask); 
-  DS.angles = DS.angles(:,segInMask);
+  DS.segCtrDistance = DS.segCtrDistance(:,segInMask); 
   DS.segDiameters = DS.segDiameters(:,segInMask);
+  DS.angles = DS.angles(:,segInMask);
+  DS.segAngle = DS.segAngle(:,segInMask);
+  DS.ctrAngle = DS.ctrAngle(:,segInMask);
 
   % only keep data for wanted vessels
-  DS.vesCenter = DS.vesCenter(:,vesInMask); 
-  DS.turtosity = DS.turtosity(:,vesInMask); 
-  DS.vesDiameter = DS.vesDiameter(:,vesInMask); 
+  DS.lengthStraight = DS.lengthStraight(:,vesInMask); 
   DS.lengthCum = DS.lengthCum(:,vesInMask); 
+  DS.turtosity = DS.turtosity(:,vesInMask); 
+  DS.vesCenter = DS.vesCenter(:,vesInMask); 
+  DS.vesCtrDistance = DS.vesCtrDistance(:,vesInMask); 
+  DS.vesDiameter = DS.vesDiameter(:,vesInMask); 
   
   % only keep data for wanted branches
   DS.branchCenter = DS.branchCenter(:,branchInMask); 
   
   % correct scalar values
-  DS.area = sum(mask(:)); 
   DS.totalLength = sum(DS.lengthCum(:));
-  DS.lengthFraction = DS.totalLength./DS.area; 
-  if DS.lengthFraction > 1
-    short_warn('we have more vessels than the image size...');
-  end
   DS.nVessel = sum(vesInMask(:));
   DS.nSegments = sum(segInMask(:));
   DS.nBranches = sum(branchInMask(:));
+  
+  DS.area = sum(fullMask(:)); % size of entire, old wound area in pixels
+  DS.area = DS.area.*AVA.pxToMu^2; % convert to square microns...
   DS.vesselDensity = DS.nVessel./DS.area;
   DS.branchDensity = DS.nBranches./DS.area;
+  DS.lengthFraction = DS.totalLength./DS.area;
+  if DS.lengthFraction > 1
+    short_warn('we have more vessels than the image size...');
+  end
+
+  DS.growthArea = sum(mask(:)); % size of area where vessels are growing 
+  DS.growthArea = DS.growthArea.*AVA.pxToMu^2; % size of area where vessels are growing 
+  DS.vesselGrowthDensity = DS.nVessel./DS.growthArea;
+  DS.branchGrowthDensity = DS.nBranches./DS.growthArea;
+  DS.lengthGrowthFraction = DS.totalLength./DS.growthArea;
+  
+  % get some simple overall statistics, so we don't have to extract them from the
+  % table later...
+  DS.meanDiameter = mean(DS.segDiameters);
+  DS.meanLength = mean(DS.lengthCum);
+  DS.meanTurtosity = mean(DS.turtosity);
+  DS.meanCtrAngle = mean(DS.ctrAngle);
+
+  DS.medianDiameter = median(DS.vesDiameter);
+  DS.medianLength = median(DS.lengthCum);
+  DS.medianTurtosity = median(DS.turtosity);
+  DS.medianCtrAngle = median(DS.ctrAngle);
+
 
   % done, lets print some info
   AVA.Done(startTic);
@@ -100,7 +133,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
   AVA.VPrintF('   Removed %i (%2.2f %%) segments.\n',segRemovedAbs,segRemovedPer);
   AVA.VPrintF('   Removed %i (%2.2f %%) branchpoints.\n',branchRemovedAbs,branchRemovedPer);
 
-  if AVA.verbosePlotting
+  if AVA.verbosePlotting && 0
     tic;
     AVA.PrintF('[Mask_Full_Data] Generating debug plot...');
 
@@ -115,6 +148,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
     imagescj(maskedImage); axis off;  colorbar off;
     title('Masked Image');
 
+    % plot segments -------------------------------------------------------
     nexttile();
     imagescj(AVA.xy); axis off;  colorbar off;
     hold on;
@@ -125,6 +159,7 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
       markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
     title('Removed / Kept Segments');
 
+    % plot vessels -------------------------------------------------------
     nexttile();
     imagescj(AVA.xy); axis off; colorbar off;
     hold on;
@@ -133,22 +168,66 @@ function [DS] = Mask_Full_Data(AVA,DS,mask)
     scatter(DS.vesCenter(2,:),DS.vesCenter(1,:),...
       markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
     title('Removed / Kept Vessels');
+  end
 
-    nexttile();
-    imagescj(AVA.xy); axis off; colorbar off;
-    hold on;
-    scatter(remBranchCenter(2,:),remBranchCenter(1,:),...
-      markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
-    scatter(DS.branchCenter(2,:),DS.branchCenter(1,:),...
-      markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
-    title('Removed / Kept Branches');
+  if AVA.verbosePlotting 
+
+    % plot vessel angles-------------------------------------------------------
+    figure()
+    cMap = hsv(45);
+    t = nexttile();
+    data =  DS.angles;
+    center = DS.segCenter;
+    scatter_plot_vessel_segments(center,data,cMap,15,1);
+    colormap(t,cMap);
+    CBar = colorbar(t);
+    nDepthLabels = 9;
+    tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
+    tickValues = linspace(min(data), max(data), nDepthLabels);
+    for iLabel = nDepthLabels:-1:1
+      zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    end
+    CBar.TickLength = 0;
+    CBar.Ticks = tickLocations;
+    CBar.TickLabels = zLabels;
+    title('measure angle');
+
+    t = nexttile();
+    data =  DS.segAngle;
+    center = DS.segCenter;
+    scatter_plot_vessel_segments(center,data,cMap,15,1);
+    colormap(t,cMap);
+    CBar = colorbar(t);
+    nDepthLabels = 9;
+    tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
+    tickValues = linspace(min(data), max(data), nDepthLabels);
+    for iLabel = nDepthLabels:-1:1
+      zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    end
+    CBar.TickLength = 0;
+    CBar.Ticks = tickLocations;
+    CBar.TickLabels = zLabels;
+    title('target angle');
+
+    t = nexttile();
+    cMap = hot(50);
+    data =  DS.ctrAngle;
+    center = DS.segCenter;
+    scatter_plot_vessel_segments(center,data,cMap,15,1);
+    colormap(t,cMap);
+    CBar = colorbar(t);
+    nDepthLabels = 9;
+    tickLocations = linspace(0, 1, nDepthLabels); % juuuust next to max limits
+    tickValues = linspace(min(data), max(data), nDepthLabels);
+    for iLabel = nDepthLabels:-1:1
+      zLabels{iLabel} = sprintf('%2.2f', tickValues(iLabel));
+    end
+    CBar.TickLength = 0;
+    CBar.Ticks = tickLocations;
+    CBar.TickLabels = zLabels;
+    title('target angle');
 
 
     done(toc);
   end
-
-
-
-
-
 end
