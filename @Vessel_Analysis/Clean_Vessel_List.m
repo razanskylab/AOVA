@@ -3,12 +3,12 @@ function [AVA] = Clean_Vessel_List(AVA,minSegments)
   if nargin == 1
     minSegments = 0;
   end
-  tic;
+  t1  = tic;
   AVA.VPrintF('Removing short (<= %i segments) and NaN vessels...',minSegments);
   nVesselsPre = AVA.nVessels;
   nSegmentsPre = AVA.nSegments;
   AVA.Data.clean_vessel_list(minSegments);
-  done(toc);
+  AVA.Done(t1);
 
   % plot how much clean up we did
   vesRemovedAbs = nVesselsPre - AVA.nVessels;
