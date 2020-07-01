@@ -42,7 +42,9 @@ classdef Vessel_Analysis < BaseClass
     nBranches(1, 1) {mustBeNumeric};
     branchDensity(1, 1) {mustBeNumeric};
     averageDiameters(1,:) {mustBeNumeric};
+    averageAngles(1,:) {mustBeNumeric};
     averageCenters(1,:) {mustBeNumeric};
+    averageAlignment(1,:) {mustBeNumeric};
     angleRanges(1,:) {mustBeNumeric}; % range of angle values per vessel
     angleStd(1,:) {mustBeNumeric}; % std of angle values per vessel
     angleChange(1,:) {mustBeNumeric}; % median diff of angle values per vessel
@@ -217,6 +219,54 @@ classdef Vessel_Analysis < BaseClass
     function averageDiameters = get.averageDiameters(AVA)
       for iVessel = AVA.nVessels:-1:1
         averageDiameters(iVessel) = mean(AVA.Data.vessel_list(iVessel).diameters);
+      end
+    end
+
+    % !!! average angle might be a problem due to phase disconti.
+    % i.e. when one vessel has values close to 90 / -90 where it wraps around
+    function averageAngles = get.averageAngles(AVA)
+      fun = @(x) cat(1, x);
+      unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        iUnitVec = unitVectors{iVessel};
+        segAngles = -atan2d(iUnitVec(:, 2), iUnitVec(:, 1))';
+        segAngles(segAngles > 90) = segAngles(segAngles > 90) - 180; % only use +/- 90 deg
+        segAngles(segAngles < -90) = segAngles(DS.segAngles < -90) + 180; % only use +/- 90 deg
+        averageAngles(iVessel) = mean(segAngles);
+      end
+    end
+
+    % alignment of vessel with respect to image center in range 0-1
+    function averageAlignment = get.averageAlignment(AVA)
+      vList = AVA.Data.vessel_list; % all the raw data is in here...
+      xCtr = AVA.imageCenter(1);
+      yCtr = AVA.imageCenter(2);
+      fun = @(x) cat(1, x);
+      segCenter = cellfun(fun, {vList.centre}, 'UniformOutput', false);
+      unitVectors = cellfun(fun, {AVA.Data.vessel_list.angles}, 'UniformOutput', false);
+      for iVessel = AVA.nVessels:-1:1
+        % calculate what angle of segments should be -> centerAngle
+        isegCenter = segCenter{iVessel};
+        xDist = isegCenter(:,1)'-xCtr;
+        yDist = isegCenter(:,2)'-yCtr;
+        centerAngle = atan2d(xDist,yDist);
+        centerAngle(centerAngle > 90) = centerAngle(centerAngle > 90) - 180; % only use +/- 90 deg
+        centerAngle(centerAngle < -90) = centerAngle(centerAngle < -90) + 180; % only use +/- 90 deg
+        % calculate what angle of segments actually was -> segAngles
+        iUnitVec = unitVectors{iVessel};
+        segAngles = -atan2d(iUnitVec(:, 2), iUnitVec(:, 1))';
+
+        % calculate difference between segAngles and centerAngle -> angleDiff
+        angleDiff = segAngles(:) - centerAngle(:); 
+        angleDiff(angleDiff > 90) = 180 - angleDiff(angleDiff > 90);
+        angleDiff(angleDiff < -90) = 180 + angleDiff(angleDiff < -90); % only use +/- 90 deg
+        angleDiff = abs(angleDiff);
+        % 45 ==  mean(angleDiff) == random alignment
+        % 0 == no diff -> full aligment
+        % 90 == max diff, perpendicular aligned
+        % convert 0-90 scale to 0-1 scale with 1 = full, 0 random and -1 missaling.
+        angleAlign = (45-angleDiff)./45;
+        averageAlignment(iVessel) = mean(angleAlign);
       end
     end
 

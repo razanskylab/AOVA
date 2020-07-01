@@ -86,12 +86,12 @@ function [DS] = Get_Full_Data(AVA)
   angleDiff(angleDiff > 90) = 180 - angleDiff(angleDiff > 90);
   angleDiff(angleDiff < -90) = 180 + angleDiff(angleDiff < -90); % only use +/- 90 deg
   DS.angleDiff = abs(angleDiff);
-  % random alignment => mean(angleDiff) == 45
-  % difference to 45deg is aligment, i.e. 45 - 25 = 20 deg
-  % 0 == no alignment, 45 == max alignment
-  % normalize -> 0 = 0% alignment, 45 = 100% alignment
-  % keyboard
+  % 45 ==  mean(angleDiff) == random alignment
+  % 0 == no diff -> full aligment
+  % 90 == max diff, perpendicular aligned
+  % convert 0-90 scale to 0-1 scale with 1 = full, 0 random and -1 missaling.
   DS.angleAlign = (45-DS.angleDiff)./45;
+
 
   % get vessel data ------------------------------------------------------------
   DS.lengthStraight = [vList(:, 1).length_straight_line];

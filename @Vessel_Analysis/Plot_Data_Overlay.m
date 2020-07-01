@@ -11,7 +11,7 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
   fun = @(x) cat(1, x, [NaN NaN]);
   switch whatOverlay
   case 'angle' % per vessel-segment
-    nColors = 180;
+    nColors = 45;
     % get all unit vecrtors
     fun = @(x) cat(1, x, [NaN NaN]);
     unitVectors = cellfun(fun, {vList.angles}, 'UniformOutput', false);
@@ -19,15 +19,29 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
     angles = atan2d(unitVectors(:, 2), unitVectors(:, 1));
     angles(angles < 0) = angles(angles < 0) + 180; % only use 0 - 180 deg
     data = angles;
-    dataColorMap = hsv(nColors);
+    dataColorMap = cmocean('phase', nColors);
+    % dataColorMap = hsv(nColors);
   case 'diameter' % per vessel-segment
     nColors = 90;
     % get all corresponding diameters
     fun = @(x) cat(1, x, NaN);
     diameters = cellfun(fun, {vList.diameters}, 'UniformOutput', false);
     diameters = cell2mat(diameters');
-    data = diameters;
+    data = diameters.*AVA.pxToMu;
     dataColorMap = make_linear_colormap(Colors.BrightGreen, Colors.PureRed, nColors);
+  case 'meanDiameter' % per vessel
+    nColors = 90;
+    data = AVA.averageDiameters.*AVA.pxToMu;
+    dataColorMap = brewermap(nColors,  '*RdYlGn'); % low values red, high values white
+  case 'meanAlignment' % per vessel
+    nColors = 90;
+    data = AVA.averageAlignment;
+    dataColorMap = brewermap(nColors,  'RdYlGn'); % low values red, high values white
+  case 'meanAngle' % per vessel
+    nColors = 90;
+    data = AVA.averageAngles;
+    dataColorMap = cmocean('phase', nColors);
+    % dataColorMap = hsv(nColors);
   case 'turtuosity' % per vessel
     nColors = 90;
     fun = @(x) cat(1, x);
@@ -39,12 +53,6 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
     straightLength = cell2mat(straightLength');
 
     turtuosity = cumLength./straightLength; 
-    % cast outliers to minmax values
-    % upLim = std(turtuosity) * 1 + median(turtuosity);
-    % lowLim = std(turtuosity) * 1 - median(turtuosity);
-    % turtuosity(turtuosity >= upLim) = upLim;
-    % turtuosity(turtuosity <= lowLim) = lowLim;
-
     data = turtuosity;
     % dataColorMap = jet(nColors);
     % dataColorMap = brewermap(nColors,  'OrRd'); % low values red, high values white
@@ -68,12 +76,12 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
   end
 
   switch whatOverlay
-  case 'angle' % per vessel-segment
+  case {'angle','meanAlignment'}  % per vessel-segment
     % nothing to do
   otherwise % remove outlier
     [data] = wrap_outlier_data(data,[0 95]);
   end
-  mean(data)
+  mean(data,'omitnan')
   groups = discretize(data, nColors);
   centers = cellfun(fun, {vList.centre}, 'UniformOutput', false);
   centers = cell2mat(centers');
@@ -98,7 +106,8 @@ function Plot_Data_Overlay(AVA, whatOverlay,plotSize)
   holdfig = ishold; % Get hold state
   hold on;
   % loop trough all colors and plot
-  if strcmp(whatOverlay, {'diameter','aangle'})
+  whatOverlay
+  if any(strcmp(whatOverlay, {'diameter','angle'}))
     for iColor = 1:nColors
       plotCenters = centers(groups == iColor, :);
       if ~isempty(plotCenters)
