@@ -3,18 +3,14 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
     maskPath = [];
   end
 
-  f1 = figure();
-  tiledlayout('flow',  'TileSpacing',  'compact');
-  th1 = nexttile();
+  nexttile();
   imagescj(rawImage); 
   hold on;
   s1 = scatter(DataStruct.segCenter(2,:),DataStruct.segCenter(1,:),'.r');
   s2 = scatter(DataStruct.vesCenter(2,:),DataStruct.vesCenter(1,:),'.g');
   hold on;
-  % s3 = scatter(imCenter(1),imCenter(2),'ob','MarkerFaceColor','b');
   legend([s1 s2],{'segment ctr','vessel ctr'});
   title('Data Overlay');
-
 
   if isempty(maskPath)
     return
@@ -29,7 +25,7 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
 
 
   % plot mask as overlay over background image to indicate borders %%%%%%%%%%%%%%
-  th2 = nexttile();
+  nexttile();
   imagescj(rawImage); 
   hold on;
   imagesc(fullRedRGB,'AlphaData',maskEdges);
@@ -39,7 +35,7 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
   title('Mask Overlay');
 
   if 0 % show angle and crosshair?
-    th3 = nexttile();
+     nexttile();
     cMap = cmocean('phase', 9);
     data =  DataStruct.segAngles;
     center = DataStruct.segCenter;
@@ -78,7 +74,7 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
     title('measure angle');
     hold on;
     plot_crosshair(imCenter,[0 0 1]); 
-    linkaxes([th1, th2, th3, th4]);
+    linkaxes([h2, th3, th4]);
   end
 
   if nargout
@@ -86,53 +82,3 @@ function fH = plot_masked_overview(DataStruct,rawImage,maskPath)
   end
 
 end
-
-
-% plot function
-% TODO
-% for both raw and masked data
-% plot CLAHE filtered background image
-% plot vessel centerlines
-% plot scatter centers
-% plot image center
-
-
-% tic;
-% AVA.PrintF('[Mask_Full_Data] Generating debug plot...');
-
-% maskedImage = rawImage;
-% maskedImage(~mask) = 0;
-
-% dFig = figure();
-% TL = tiledlayout(dFig,'flow');
-% TL.Padding = 'compact'; % remove uneccesary white space...
-
-% nexttile(); 
-% imagescj(maskedImage); axis off;  colorbar off;
-% title('Masked Image');
-
-% % plot segments -------------------------------------------------------
-% nexttile();
-% imagescj(rawImage); axis off;  colorbar off;
-% hold on;
-% markerSize = 10;
-% scatter(remSegCenter(2,:),remSegCenter(1,:),...
-%   markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
-% scatter(DS.segCenter(2,:),DS.segCenter(1,:),...
-%   markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
-% title('Removed / Kept Segments');
-
-% % plot vessels -------------------------------------------------------
-% nexttile();
-% imagescj(rawImage); axis off; colorbar off;
-% hold on;
-% scatter(remVesCenter(2,:),remVesCenter(1,:),...
-%   markerSize,'filled','MarkerFaceColor',Colors.DarkRed);
-% scatter(DS.vesCenter(2,:),DS.vesCenter(1,:),...
-%   markerSize,'filled','MarkerFaceColor',Colors.DarkGreen);
-% title('Removed / Kept Vessels');
-
-
-% maskEdges = edge(rotMask);
-% SE = strel('disk',5);
-% maskEdges = imdilate(maskEdges,SE);
